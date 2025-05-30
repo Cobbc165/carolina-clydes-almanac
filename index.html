@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carolina Clyde's Interactive Pier Fishing Almanac</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Chosen Palette: Coastal Calm */
+        /* Application Structure Plan: Single-page app with tab/section navigation (Home, Gear Up, Rigging, Seasonal Almanac, NC Pier Guide, Etiquette/Safety, Hot Tips, Closed Piers, Ask Clyde AI). The Pier Guide will be central, allowing regional selection and detailed views of individual piers. The Seasonal Almanac will use an interactive table for fish by season. This structure is chosen to organize the rich textual and tabular data logically, making it easy for users to find specific information relevant to their fishing plans, rather than a linear read. */
+        /* Visualization & Content Choices:
+            - Welcome, Gear, Rigging, Etiquette, Tips, Closed Piers: Structured HTML text, lists, accordions for dense info. Goal: Inform. Interaction: Click to expand/collapse. Justification: Readability. Library: HTML/JS.
+            - Seasonal Almanac (Fish by Season Table): Interactive HTML table. Goal: Inform/Compare. Interaction: Filter by month/species. Justification: Easy lookup of fish activity. Library: HTML/JS.
+            - NC Pier Guide (Quick Ref Table): Interactive HTML table. Goal: Inform/Compare. Interaction: Filter by region/pier. Justification: Quick overview of pier logistics. Library: HTML/JS.
+            - NC Pier Guide (Individual Pier Details): Dynamically loaded text sections for each pier. Goal: Inform. Interaction: Select pier to view details. Justification: Focused information display. Library: HTML/JS.
+            - Ask Clyde AI: Text input for user question, button to trigger LLM call, display area for LLM response. Goal: Inform/Advise. Interaction: User types question, clicks button. Justification: Provides dynamic, personalized advice. Library: HTML/JS, Gemini API.
+            - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. */
+        /* CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. */
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfaf6; /* Warm Neutral: beige-50 */
+            color: #374151; /* gray-700 */
+        }
+        .nav-button {
+            @apply px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md transition-colors duration-150;
+        }
+        .nav-button.active {
+            @apply bg-amber-600 hover:bg-amber-700;
+        }
+        .content-section {
+            @apply p-4 md:p-6 bg-white rounded-lg shadow-lg;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-teal-700 mb-4 border-b-2 border-teal-200 pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-teal-600 mt-6 mb-3;
+        }
+        h4 {
+            @apply text-lg font-semibold text-gray-700 mt-4 mb-2;
+        }
+        p {
+            @apply mb-3 leading-relaxed;
+        }
+        ul {
+            @apply list-disc list-inside mb-3 pl-4;
+        }
+        strong {
+            @apply font-semibold text-gray-800;
+        }
+        .pier-card {
+            @apply bg-teal-50 p-4 rounded-lg shadow hover:shadow-md cursor-pointer transition-shadow;
+        }
+        .details-summary {
+            @apply text-lg font-semibold text-teal-600 cursor-pointer py-2;
+        }
+        .details-content {
+            @apply pl-4 border-l-2 border-teal-200;
+        }
+        table {
+            @apply min-w-full divide-y divide-gray-200 border border-gray-300 rounded-lg shadow-sm;
+        }
+        th {
+            @apply px-4 py-2 bg-teal-50 text-left text-xs font-medium text-teal-700 uppercase tracking-wider;
+        }
+        td {
+            @apply px-4 py-2 whitespace-nowrap text-sm text-gray-600;
+        }
+        tr:nth-child(even) {
+            @apply bg-white;
+        }
+        tr:nth-child(odd) {
+            @apply bg-stone-50;
+        }
+        .filter-select {
+            @apply block w-full md:w-auto p-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 text-sm;
+        }
+        .tooltip {
+            @apply absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip;
+        }
+    </style>
+</head>
+<body class="bg-beige-50 text-gray-800">
+
+    <header class="bg-teal-700 text-white p-4 shadow-md">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-3xl font-bold">🎣 Carolina Clyde's Interactive Pier Almanac</h1>
+            <p class="text-sm mt-2 md:mt-0">Your Digital Guide to NC Coastal Waters</p>
+        </div>
+    </header>
+
+    <nav class="bg-teal-600 p-3 shadow-md sticky top-0 z-50">
+        <div class="container mx-auto">
+            <div class="flex flex-wrap justify-center gap-2" id="navigation">
+                <button class="nav-button active" data-target="welcome">Welcome</button>
+                <button class="nav-button" data-target="gear">Gear Up</button>
+                <button class="nav-button" data-target="rigging">Rigging</button>
+                <button class="nav-button" data-target="seasonal-almanac">Seasonal Almanac</button>
+                <button class="nav-button" data-target="pier-guide">NC Pier Guide</button>
+                <button class="nav-button" data-target="etiquette-safety">Etiquette & Safety</button>
+                <button class="nav-button" data-target="hot-tips">Hot Tips</button>
+                <button class="nav-button" data-target="closed-piers">Closed Piers</button>
+                <button class="nav-button" data-target="ask-clyde-ai">Ask Clyde AI ✨</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 md:p-6 space-y-8">
+        <section id="welcome" class="page-content content-section">
+            <h2>Welcome, Young Angler!</h2>
+            <p>This isn't just a guide; it's an invitation. An invitation to step onto the pier, feel the salty breeze, cast your line, and discover the calm, the thrill, and the quiet wisdom that only fishing can offer. You've got that fantastic PENN Wrath II 10' 8000 combo – that's a serious piece of gear, and it tells me you're ready to get serious about fishing. I’ve spent countless hours on these North Carolina piers, learned a thing or two, and I'm here to share it all with you. So, let's dive in!</p>
+            <h3>Your Battle Station: The PENN Wrath II Combo</h3>
+            <p>Your PENN Wrath II 10' 8000 combo is a powerhouse, perfect for the kind of fishing we do off these piers. It's tough, reliable, and it's going to be your best friend out there.</p>
+            <ul>
+                <li><strong>10-foot Rod:</strong> This long rod is your secret weapon. It lets you launch your bait way out there, reaching those fish that hang out in deeper water. The extra length also helps keep your line up and away from the pier's pilings and other folks' lines, which is super important in a busy spot. Plus, when you hook into a big one, this length gives you the leverage you need to safely bring that fish up to the deck.</li>
+                <li><strong>8000-Size Reel:</strong> This reel is a true workhorse. It's built to handle the saltwater, holding plenty of strong line for those hard-fighting fish that like to make long runs. Its powerful drag system means you've got the stopping power to tire out stubborn fish and keep your line from snapping.</li>
+            </ul>
+        </section>
+
+        <section id="gear" class="page-content content-section" style="display: none;">
+            <h2>Clyde's Essential Pier Fishing Shopping List & Spooling</h2>
+            <details class="mb-4">
+                <summary class="details-summary">Ideal Fishing Line (The Foundation of Success)</summary>
+                <div class="details-content mt-2">
+                    <h4>Monofilament Backing:</h4>
+                    <ul>
+                        <li><strong>Quantity:</strong> Get a small spool, maybe 100-150 yards.</li>
+                        <li><strong>Strength:</strong> Look for 20-30 lb test monofilament.</li>
+                        <li><strong>Why:</strong> Your filler. Affordable, keeps braided line from slipping.</li>
+                    </ul>
+                    <h4>Braided Main Line:</h4>
+                    <ul>
+                        <li><strong>Quantity:</strong> Aim for a 200-300 yard spool.</li>
+                        <li><strong>Strength:</strong> Pick up 50-65 lb test braided line.</li>
+                        <li><strong>Why:</strong> Super strong, thin, casts far, no stretch for sensitivity.</li>
+                        <li><strong>Color:</strong> Bright (yellow/green) for visibility, or dark (green/blue) for camouflage.</li>
+                    </ul>
+                    <h4>Fluorocarbon Leader Material:</h4>
+                    <ul>
+                        <li><strong>Quantity:</strong> A small spool, 25-50 yards.</li>
+                        <li><strong>Strength:</strong> Get 30-60 lb test fluorocarbon.</li>
+                        <li><strong>Why:</strong> CRUCIAL! Almost invisible underwater, super tough against scrapes.</li>
+                    </ul>
+                </div>
+            </details>
+            <details class="mb-4">
+                <summary class="details-summary">Essential Terminal Tackle</summary>
+                <div class="details-content mt-2">
+                    <h4>Pyramid Sinkers:</h4>
+                    <p>3 oz are great for strong currents. Clyde's Tip: Get 1 oz and 2 oz too for versatility.</p>
+                    <h4>Circle Hooks:</h4>
+                    <p>Assorted Sizes (2/0 - 8/0). Corner-of-mouth hooking, healthier for release. Match to bait.</p>
+                    <h4>Swivels:</h4>
+                    <ul>
+                        <li><strong>Heavy-Duty Barrel Swivels (Size 4-6):</strong> Prevent line twist.</li>
+                        <li><strong>Snap Swivels (Size 4-6):</strong> Quick rig/lure changes.</li>
+                    </ul>
+                    <h4>Fish-Finder Slides:</h4>
+                    <p>Let line slide freely, fish won't feel sinker weight.</p>
+                    <h4>Sabiki Rigs:</h4>
+                    <p>Multi-fly rigs for catching baitfish (pinfish, cigar minnows).</p>
+                    <h4>Leader Material (Extra Heavy):</h4>
+                    <p>Small spool of 60-80 lb mono/fluoro for super-tough leaders for big/toothy fish.</p>
+                </div>
+            </details>
+            <details class="mb-4">
+                <summary class="details-summary">Ideal Bait (What Gets the Bites)</summary>
+                <div class="details-content mt-2">
+                    <h4>Live Bait:</h4>
+                    <ul>
+                        <li><strong>Live Shrimp:</strong> Candy for almost any pier fish.</li>
+                        <li><strong>Live Finger Mullet, Pinfish, Croaker:</strong> Excellent for bigger, predatory fish like Red Drum, Flounder, Spanish Mackerel.</li>
+                    </ul>
+                    <h4>Fresh Dead Bait:</h4>
+                    <ul>
+                        <li><strong>Squid:</strong> Tough, stays on hook, lots of different bottom fish love it.</li>
+                        <li><strong>Cut Bait:</strong> Freshly cut pieces of mullet, pilchards, or Spanish mackerel are like a dinner bell for larger game fish.</li>
+                    </ul>
+                    <h4>Artificial Lures (Optional, but Fun!):</h4>
+                    <ul>
+                        <li><strong>Spoons (Kastmaster, Sting Silver):</strong> Great for Spanish mackerel and bluefish when they're actively chasing bait.</li>
+                        <li><strong>Jigs (bucktails, soft plastics):</strong> Very versatile, can catch a wide range of fish.</li>
+                        <li><strong>Gotcha Plugs:</strong> A classic pier lure, especially effective for Spanish mackerel and bluefish.</li>
+                    </ul>
+                    <p><strong>Clyde's Bait Shop Tip:</strong> ALWAYS ask local pier bait shop staff what's biting! Their advice is golden.</p>
+                </div>
+            </details>
+            <details>
+                <summary class="details-summary">Clyde's Line Game: Spooling Your Reel (The Master's Way)</summary>
+                <div class="details-content mt-2">
+                    <h4>Monofilament Backing (50-100 yards of 20-30 lb mono):</h4>
+                    <ol class="list-decimal list-inside">
+                        <li>Tie mono to reel spool using an Arbor Knot. Pull tight.</li>
+                        <li>Wind on 50-100 yards of mono.</li>
+                    </ol>
+                    <p><strong>Clyde's Pro Method for Perfect Fill:</strong> Spool braid first. Tie mono backing to braid end, fill spool to 1/8 inch from rim. Wind all line off to separate spool. Wind back onto reel, mono first, then braid. Perfect fill!</p>
+                    <h4>Braided Main Line (200-300 yards of 50-65 lb braid):</h4>
+                    <ol class="list-decimal list-inside">
+                        <li>Connect braid to mono backing with Double Uni Knot.</li>
+                        <li>Wind braid tightly and evenly, maintaining firm tension. Fill to 1/8 inch (or less) from spool edge. DO NOT overfill (causes wind knots).</li>
+                    </ol>
+                    <h4>Fluorocarbon Leader (3-6 feet of 30-60 lb fluorocarbon):</h4>
+                    <p>Crucial knot! Tied directly to braided main line.</p>
+                    <ul>
+                        <li><strong>Clyde's Top Knot: The FG Knot.</strong> Incredibly strong, super thin, slides through guides smoothly. Worth the practice! (Search YouTube for tutorials).</li>
+                        <li><strong>Solid Alternative: The Double Uni Knot.</strong> Strong, reliable backup if FG Knot is tricky.</li>
+                    </ul>
+                    <p><strong>Why a long leader?</strong> Tough against pier/barnacle scrapes, toothy fish. Room for multiple re-ties.</p>
+                </div>
+            </details>
+        </section>
+
+        <section id="rigging" class="page-content content-section" style="display: none;">
+            <h2>Clyde's Rigging Handbook: Your Pier Playbook</h2>
+            <details class="mb-4">
+                <summary class="details-summary">Heavy Duty Bottom Rig (3 oz Pyramid Sinkers)</summary>
+                <div class="details-content mt-2">
+                    <p><strong>Best For:</strong> Bigger bottom fish (Red Drum, Black Drum, catfish, Snook). Strong currents.</p>
+                    <h4>How to Rig:</h4>
+                    <ol class="list-decimal list-inside">
+                        <li>Slide fish-finder slide onto fluorocarbon leader.</li>
+                        <li>Attach 3 oz pyramid sinker to fish-finder slide.</li>
+                        <li>Tie heavy-duty barrel swivel (e.g., size 4) to end of fluorocarbon leader.</li>
+                        <li>To other side of swivel, tie a 12-24 inch piece of stout fluorocarbon leader material (say, 40-60 lb test) – this short piece is called the "leader" or "hook snell."</li>
+                        <li>Finally, tie a circle hook (e.g., 4/0 to 8/0, match bait) to the end of that short leader.</li>
+                    </ol>
+                    <p><strong>Clyde's Bait Tip:</strong> Load this rig with live shrimp, whole dead shrimp, or hearty cut bait like mullet or squid.</p>
+                </div>
+            </details>
+            <details class="mb-4">
+                <summary class="details-summary">Casting Rig (Fast-Moving Predators)</summary>
+                <div class="details-content mt-2">
+                    <p><strong>Best For:</strong> When you see those schools of Spanish Mackerel or Bluefish chasing bait near the surface. These are active, exciting fish!</p>
+                    <h4>How to Rig:</h4>
+                    <p>Tie a spoon (like a Kastmaster or Sting Silver) or a Gotcha plug directly to the end of your fluorocarbon leader.</p>
+                    <p><strong>Clyde's Tooth Advisory:</strong> If you're consistently catching toothy critters like bluefish or Spanish mackerel that are cutting your leader, consider adding a short (6-12 inch) piece of 30-50 lb monofilament or light wire leader between your fluorocarbon and the lure. Attach it with a small snap swivel. This little addition can save you a lot of lures!</p>
+                </div>
+            </details>
+            <details>
+                <summary class="details-summary">Sabiki Rig (Baitfish Bonanza)</summary>
+                <div class="details-content mt-2">
+                    <p><strong>Best For:</strong> This is your ticket to catching your own live bait. Fresh, live bait is almost always the best for tempting bigger fish!</p>
+                    <h4>How to Rig:</h4>
+                    <ol class="list-decimal list-inside">
+                        <li>Tie the Sabiki rig directly to your braided main line (no leader needed for Sabiki).</li>
+                        <li>Attach a small sinker (1/2 - 1 oz) to the bottom snap of the Sabiki.</li>
+                    </ol>
+                    <p><strong>Clyde's Technique:</strong> When you see small baitfish dimpling the surface or hear about bait schools, drop your Sabiki down and gently jig it up and down. Those tiny flies will trick the baitfish into biting.</p>
+                </div>
+            </details>
+        </section>
+
+        <section id="seasonal-almanac" class="page-content content-section" style="display: none;">
+            <h2>Carolina Clyde's Almanac: NC Pier Fishing by Season</h2>
+            <p>Understanding the seasons is like having a secret map to the fish. Fish move based on water temperature, and what's biting strong today might be gone next month. (Current Date: Friday, May 30, 2025 – You're hitting the piers at a perfect time!)</p>
+            
+            <h3>General Seasonal Overview</h3>
+            <details class="mb-3">
+                <summary class="details-summary">Spring (March, April, May)</summary>
+                <div class="details-content mt-2">
+                    <p><strong>What's Happening:</strong> Water warms (50s-70s °F), fish wake up, move closer to shore. Increasing activity and migration.</p>
+                    <p><strong>Target Fish:</strong> Spanish Mackerel (esp. Apr/May), Bluefish, Pompano (Apr/May, surf zone), Sea Mullet (Whiting), Croaker, Red Drum (Puppy Drum), Flounder.</p>
+                    <p><strong>Clyde's Spring Tip:</strong> Watch water clarity (clearer for Spanish). Tides are important; fish feed actively during incoming/outgoing tides.</p>
+                </div>
+            </details>
+            <details class="mb-3">
+                <summary class="details-summary">Summer (June, July, August)</summary>
+                <div class="details-content mt-2">
+                    <p><strong>What's Happening:</strong> Water warmest (70s-low 80s °F). Peak season, can be crowded.</p>
+                    <p><strong>Target Fish:</strong> King Mackerel (near T-heads, requires king rigs/live bait), Spanish Mackerel, Bluefish, Shark (various, heavy tackle/wire leaders), Tarpon (southern piers, large live baits), Flounder (pilings/structure), Sheepshead (barnacle-covered pilings, fiddler crabs/clam/shrimp), Spot, Croaker, Sea Mullet.</p>
+                    <p><strong>Clyde's Summer Tip:</strong> Head out early to beat the heat and crowds. Fishing at night can be very productive for certain species under the pier lights. Consider a longer rod for casting over distant schools.</p>
+                </div>
+            </details>
+            <details class="mb-3">
+                <summary class="details-summary">Fall (September, October, November)</summary>
+                <div class="details-content mt-2">
+                    <p><strong>What's Happening:</strong> Water cools (70s-50s °F). Often best fishing season; fish migrate south, feed heavily.</p>
+                    <p><strong>Target Fish:</strong> Red Drum (Big Bulls, incredible fights), Spanish Mackerel, Bluefish (often larger), Flounder (moving to inlets), Speckled Trout (as water cools), Pompano, Whiting, Croaker, King Mackerel (strong fall run).</p>
+                    <p><strong>Clyde's Fall Tip:</strong> Prime time for big fish! Prepare tackle for heavy fights. Fish can be hot right before a cold snap.</p>
+                </div>
+            </details>
+            <details class="mb-3">
+                <summary class="details-summary">Winter (December, January, February)</summary>
+                <div class="details-content mt-2">
+                    <p><strong>What's Happening:</strong> Water coldest (40s-50s °F). Fishing slows, dedicated anglers find success.</p>
+                    <p><strong>Target Fish:</strong> Red Drum (Puppy Drum, deeper holes/structure), Black Drum (bottom rigs, shrimp/crab), Sheepshead (pilings if not too cold), Speckled Trout (deeper, warmer pockets near structure), Bluefish (occasional).</p>
+                    <p><strong>Clyde's Winter Tip:</strong> Go on warmer, sunny days. Fish often congregate in deeper water or around warm outfalls. Bites can be very subtle; sensitivity is key.</p>
+                </div>
+            </details>
+
+            <h3>Interactive NC Pier Fishing Calendar (Species by Season)</h3>
+            <p>Use the filters below to see which fish are generally active during specific months or to check the seasonal activity for a particular species. "Hot" indicates peak season, "OK" means good chances, "Closed" means the season is closed for that species, and a blank cell means low or no presence.</p>
+            <div class="flex flex-col md:flex-row gap-4 mb-4 items-center">
+                <select id="monthFilter" class="filter-select">
+                    <option value="">All Months</option>
+                    <option value="jan">January</option>
+                    <option value="feb">February</option>
+                    <option value="mar">March</option>
+                    <option value="apr">April</option>
+                    <option value="may">May</option>
+                    <option value="jun">June</option>
+                    <option value="jul">July</option>
+                    <option value="aug">August</option>
+                    <option value="sep">September</option>
+                    <option value="oct">October</option>
+                    <option value="nov">November</option>
+                    <option value="dec">December</option>
+                </select>
+                <select id="speciesFilterSeasonal" class="filter-select">
+                    <option value="">All Species</option>
+                </select>
+                <button id="resetSeasonalFilters" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm">Reset Filters</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead id="seasonalCalendarHead"></thead>
+                    <tbody id="seasonalCalendarBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="pier-guide" class="page-content content-section" style="display: none;">
+            <h2>Carolina Clyde's Guide to North Carolina Piers</h2>
+            <p>North Carolina is blessed with fantastic fishing piers, each with its own character. While specific fishing conditions change daily, this guide provides general information. Always check a pier's specific website or call ahead for operating hours, fees, and current fishing reports.</p>
+            
+            <div id="pierQuickRefContainer" class="mb-8">
+                <h3>NC Pier Quick Reference Guide</h3>
+                <p>Use the filters to quickly find pier information. Click on a pier name in the list below the table for full details.</p>
+                 <div class="flex flex-col md:flex-row gap-4 mb-4 items-center">
+                    <select id="regionFilterQuickRef" class="filter-select">
+                        <option value="">All Regions</option>
+                        <option value="Southern Coastal Piers">Southern Coastal Piers</option>
+                        <option value="Outer Banks Piers">Outer Banks Piers</option>
+                    </select>
+                    <input type="text" id="pierNameFilterQuickRef" class="filter-select" placeholder="Filter by Pier Name...">
+                    <button id="resetQuickRefFilters" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm">Reset Filters</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead id="pierQuickRefHead"></thead>
+                        <tbody id="pierQuickRefBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3>Explore Piers by Region</h3>
+            <div class="flex gap-4 mb-6">
+                <button class="nav-button region-selector active" data-region="Southern Coastal Piers">Southern Coastal Piers</button>
+                <button class="nav-button region-selector" data-region="Outer Banks Piers">Outer Banks Piers</button>
+            </div>
+            <div id="pierListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+            <div id="pierDetailView" class="mt-6 bg-stone-50 p-4 rounded-lg shadow">
+                <p class="text-center text-gray-500">Select a pier from the list above to see details.</p>
+            </div>
+
+            <div id="pierComparisonContainer" class="mt-12">
+                <h3>Pier-Specific Seasonal Catches & Techniques Comparison</h3>
+                <p>This table helps you compare what's biting where, and how to target them across different piers and seasons.</p>
+                <div class="flex flex-col md:flex-row gap-4 mb-4 items-center">
+                     <select id="pierNameFilterComparison" class="filter-select">
+                        <option value="">All Piers</option>
+                    </select>
+                    <select id="seasonFilterComparison" class="filter-select">
+                        <option value="">All Seasons</option>
+                        <option value="Spring">Spring</option>
+                        <option value="Summer">Summer</option>
+                        <option value="Fall">Fall</option>
+                        <option value="Winter">Winter</option>
+                    </select>
+                    <input type="text" id="fishSpeciesFilterComparison" class="filter-select" placeholder="Filter by Fish Species...">
+                     <button id="resetComparisonFilters" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm">Reset Filters</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead id="pierComparisonHead"></thead>
+                        <tbody id="pierComparisonBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="etiquette-safety" class="page-content content-section" style="display: none;">
+            <h2>Carolina Clyde's Pier Etiquette & Safety Guide</h2>
+            <p>Follow these rules, earn respect, and have a safer, more enjoyable time.</p>
+            <ul>
+                <li><strong>Respect the Space:</strong> Piers get crowded. Be mindful of others' lines and give room. Don't cast too close to another angler.</li>
+                <li><strong>Look Before You Cast:</strong> Always glance around to ensure your cast won't tangle lines or hit anyone.</li>
+                <li><strong>Clean Up Your Act:</strong> Dispose of all trash, old line, and bait containers in designated bins.</li>
+                <li><strong>Respect the Fish:</strong> If not keeping, release quickly and gently. Learn proper handling and use a de-hooker.</li>
+                <li><strong>Know the Rules:</strong> CRITICAL! Check NC fishing regulations for licenses, size/bag limits (NC Division of Marine Fisheries website).</li>
+                <li><strong>Safety First:</strong>
+                    <ul>
+                        <li>Watch for slippery spots, exposed nails, loose boards.</li>
+                        <li>Pay attention to weather forecasts, especially lightning. Head inside if a storm brews.</li>
+                        <li>Have a basic first-aid kit.</li>
+                        <li>Use a drop net for all but the smallest fish. NEVER hoist a large fish with just rod/reel – you'll snap your rod, lose fish, or both.</li>
+                    </ul>
+                </li>
+            </ul>
+             <h3>Important Considerations for Pier Fishing:</h3>
+            <ul>
+                <li><strong>Pier Fees:</strong> Most private piers charge daily fees. State-owned piers also have fees. This usually covers your blanket fishing license for that pier.</li>
+                <li><strong>Check Reports:</strong> Always check the pier's website or call for current fishing reports.</li>
+                <li><strong>Crowds:</strong> Popular piers can get very crowded. Patience and pier etiquette are key.</li>
+                <li><strong>Pier Rules:</strong> Each pier has specific rules (bait, rods, gaffing, fish cleaning). Read them upon arrival.</li>
+            </ul>
+        </section>
+
+        <section id="hot-tips" class="page-content content-section" style="display: none;">
+            <h2>Carolina Clyde's Hot Tips for Pier Success</h2>
+            <p>Little things that make a big difference.</p>
+            <ul>
+                <li><strong>Fish the Tides:</strong> Fish activity is tied to water movement. Aim for one hour before/after high tide and one hour before/after low tide. Slack periods (tide changing) are often prime feeding times.</li>
+                <li><strong>Go Early/Late:</strong> Dawn and dusk are often best. Low light brings out fish, usually quieter on the pier.</li>
+                <li><strong>Observe Like a Hawk:</strong> Watch successful anglers. What rigs/bait are they using? Where are they casting? Local knowledge is invaluable.</li>
+                <li><strong>Fish the Structure:</strong> Pier pilings, submerged reefs, changes in bottom depth attract fish seeking food/shelter. Cast near these.</li>
+                <li><strong>Read the Water:</strong> Look for baitfish signs (ripples, jumping fish), diving birds. Subtle water color changes can point to deeper pockets.</li>
+                <li><strong>Patience is a Virtue:</strong> Fishing isn't always constant action. Enjoy the quiet. The bite can turn on suddenly!</li>
+                <li><strong>Master Your Knots:</strong> Practice at home, especially the FG Knot. A strong knot is your strongest link to the fish.</li>
+                <li><strong>Set Your Drag Correctly:</strong> Drag should let line peel steadily when fish pulls hard, without breaking. Start at ~1/3 of leader's breaking strength. Check by pulling line from reel before casting.</li>
+                <li><strong>Bring a Rod Holder:</strong> Sand spike or pier-specific holder keeps rod secure.</li>
+                <li><strong>Embrace the Journey:</strong> Fishing is about learning, adapting, connecting with nature, building character. Share knowledge, celebrate successes, learn from challenges.</li>
+            </ul>
+        </section>
+
+        <section id="closed-piers" class="page-content content-section" style="display: none;">
+            <h2>Important Advisory: Currently Closed Piers</h2>
+            <p>The dynamic nature of coastal infrastructure means pier accessibility can change. Always verify a pier's operational status before your trip.</p>
+            <h3>A. Holden Beach Pier: Current Status and Impact on Fishing</h3>
+            <p>The Holden Beach Pier is presently <strong>closed for fishing</strong> and will remain so until further notice. The Town of Holden Beach, which recently acquired the pier properties, conducted an assessment revealing that the structure has "likely surpassed its remaining service life" and requires immediate, substantial maintenance. Both the pier and its adjacent buildings are currently inaccessible to the public.</p>
+            <p>This closure represents a significant loss of a key fishing location in the southern coastal region. Anglers should seek alternatives like Ocean Isle Beach Pier or consider charter services.</p>
+            <h3>B. Carolina Beach Pier: Current Status and Impact on Fishing</h3>
+            <p>Similarly, the Carolina Beach Pier is currently <strong>closed for fishing</strong> until further notice. The closure is attributed to the end of the pier being inaccessible due to anticipated repairs.</p>
+            <p>Anglers planning to fish in this vicinity should explore alternatives such as Kure Beach Pier, surf fishing, or local charter services.</p>
+            <p>The explicit closure of these piers due to structural deficiencies, coupled with rebuilding efforts at others like Avalon Pier, underscores a critical aspect of pier fishing: access is not guaranteed. Always verify current operational status via official websites, phone calls, or social media updates.</p>
+        </section>
+
+        <section id="ask-clyde-ai" class="page-content content-section" style="display: none;">
+            <h2>Ask Clyde AI ✨</h2>
+            <p>Have a question about pier fishing in North Carolina? Ask Carolina Clyde's AI Assistant! It will draw on the wisdom of the almanac to give you advice.</p>
+            <div class="mt-4 mb-4">
+                <textarea id="aiQuestionInput" class="w-full p-3 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 text-sm" rows="4" placeholder="e.g., What's the best bait for Red Drum in the fall?"></textarea>
+            </div>
+            <div class="flex justify-center mb-4">
+                <button id="askClydeButton" class="nav-button bg-amber-600 hover:bg-amber-700 flex items-center justify-center">
+                    Ask Clyde ✨
+                    <span id="loadingSpinner" class="hidden ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                </button>
+            </div>
+            <div id="aiResponseContainer" class="bg-stone-50 p-4 rounded-lg shadow min-h-[100px] flex items-center justify-center text-gray-600 italic">
+                Your answer from Clyde will appear here...
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-teal-700 text-white text-center p-4 mt-8">
+        <p>&copy; 2025 Carolina Clyde's Interactive Pier Almanac. Happy Fishing!</p>
+    </footer>
+
+    <script>
+        const seasonalFishData = [
+            { species: "Albacore", jan: "", feb: "", mar: "", apr: "", may: "Hot", jun: "", jul: "", aug: "", sep: "Hot", oct: "Hot", nov: "", dec: "" },
+            { species: "Barracuda", jan: "", feb: "", mar: "", apr: "", may: "", jun: "", jul: "Hot", aug: "Hot", sep: "Hot", oct: "", nov: "", dec: "" },
+            { species: "Black Drum", jan: "OK", feb: "OK", mar: "Hot", apr: "Hot", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "Hot", dec: "Hot" },
+            { species: "Bluefish", jan: "", feb: "", mar: "Hot", apr: "Hot", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "Hot", dec: "" },
+            { species: "Cobia", jan: "", feb: "", mar: "", apr: "OK", may: "Hot", jun: "Hot", jul: "Hot", aug: "", sep: "", oct: "", nov: "", dec: "" },
+            { species: "Croaker", jan: "", feb: "", mar: "", apr: "", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "Hot", dec: "" },
+            { species: "Flounder", jan: "Closed", feb: "Closed", mar: "", apr: "OK", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "OK", dec: "OK" },
+            { species: "King Mackerel", jan: "", feb: "", mar: "", apr: "OK", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "OK", dec: "" },
+            { species: "Mahi Mahi", jan: "", feb: "", mar: "", apr: "", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "", nov: "", dec: "" },
+            { species: "Pompano", jan: "", feb: "", mar: "", apr: "Hot", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "OK", dec: "" },
+            { species: "Red Drum", jan: "OK", feb: "OK", mar: "Hot", apr: "Hot", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "Hot", dec: "OK" },
+            { species: "Sea Mullet", jan: "", feb: "", mar: "Hot", apr: "Hot", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "Hot", dec: "OK" },
+            { species: "Sheepshead", jan: "", feb: "", mar: "OK", apr: "Hot", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "Hot", dec: "" },
+            { species: "Spanish Mackerel", jan: "", feb: "", mar: "", apr: "Hot", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "", dec: "" },
+            { species: "Speckled Trout", jan: "OK", feb: "OK", mar: "OK", apr: "Hot", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "Hot", dec: "Hot" },
+            { species: "Spot", jan: "", feb: "", mar: "", apr: "", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "Hot", dec: "" },
+            { species: "Striped Bass", jan: "OK", feb: "OK", mar: "OK", apr: "OK", may: "", jun: "", jul: "", aug: "", sep: "OK", oct: "Hot", nov: "Hot", dec: "Hot" },
+            { species: "Tarpon", jan: "", feb: "", mar: "", apr: "", may: "", jun: "OK", jul: "Hot", aug: "Hot", sep: "Hot", oct: "", nov: "", dec: "" },
+            { species: "Tuna (various)", jan: "Hot", feb: "Hot", mar: "OK", apr: "OK", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "OK", dec: "Hot" },
+            { species: "Wahoo", jan: "", feb: "", mar: "", apr: "", may: "Hot", jun: "Hot", jul: "Hot", aug: "Hot", sep: "Hot", oct: "Hot", nov: "", dec: "" }
+        ];
+
+        const pierQuickRefData = [
+            { id: "ocean-isle-beach-pier", name: "Ocean Isle Beach Pier", location: "Ocean Isle Beach", status: "Open", features: "Grill, Gift Shop, Arcade, Ice Cream Parlor, Benches", length: "968 ft", fee: "N/A (Charter prices vary)", rental: "N/A", license: "N/A", contact: "N/A", region: "Southern Coastal Piers" },
+            { id: "kure-beach-pier", name: "Kure Beach Pier", location: "Kure Beach", status: "Open", features: "Oldest Pier on Atlantic Coast, Concession, Arcade, Souvenir Shop, Restrooms", length: "711 ft", fee: "Modest Daily Fee", rental: "N/A", license: "N/A", contact: "(910) 458-5524", region: "Southern Coastal Piers" },
+            { id: "bogue-inlet-pier", name: "Bogue Inlet Pier (Emerald Isle)", location: "Emerald Isle", status: "Open", features: "Family-owned, Bait & Tackle, Grill & Bar, Restrooms, NC Sea Mullet Record", length: "1000 ft (Rebuilt)", fee: "$17.50", rental: "$10 (6 hrs)", license: "Yes", contact: "(252) 354-2919", region: "Southern Coastal Piers" },
+            { id: "jolly-roger-pier", name: "Jolly Roger Pier", location: "Topsail Beach", status: "Open", features: "Fully Lit at Night, Tackle Shop, Inn Guests Discount", length: "850 ft", fee: "$16", rental: "N/A", license: "Yes", contact: "(910) 328-4616", region: "Southern Coastal Piers" },
+            { id: "surf-city-pier", name: "Surf City Pier", location: "Surf City", status: "Open", features: "First Topsail Pier, Fish Cleaning Stations, Tackle Shop, Grill", length: "937 ft", fee: "$12 (1 rod)", rental: "$12 (+$30 deposit)", license: "N/A", contact: "N/A", region: "Southern Coastal Piers" },
+            { id: "seaview-fishing-pier", name: "Seaview Fishing Pier", location: "North Topsail Beach", status: "Open", features: "Longest NC Pier, Pier House, Motel, Restaurant, Live Webcams", length: "N/A", fee: "$17.00", rental: "$8.00", license: "N/A", contact: "(910) 328-3172", region: "Southern Coastal Piers" },
+            { id: "avon-fishing-pier", name: "Avon Fishing Pier", location: "Avon", status: "Open", features: "Iconic Structure, Watch Surfers, Snack & Bait Shop Nearby", length: "600 ft", fee: "N/A", rental: "N/A", license: "Yes", contact: "(252) 995-5480", region: "Outer Banks Piers" },
+            { id: "rodanthe-pier", name: "Rodanthe Pier", location: "Rodanthe", status: "Open", features: "Family-friendly, Pier House, Live Webcam", length: "700 ft", fee: "$15", rental: "$12.00", license: "Yes", contact: "(252) 987-0030", region: "Outer Banks Piers" },
+            { id: "outer-banks-fishing-pier", name: "Outer Banks Fishing Pier", location: "Nags Head", status: "Open", features: "Lighted 24/7, Tackle Shop, Fishheads Bar & Grill w/ Live Music", length: "600 ft", fee: "N/A (Daily/Weekly/Weekend passes)", rental: "Yes", license: "Yes", contact: "(252) 441-5740", region: "Outer Banks Piers" },
+            { id: "jennettes-pier", name: "Jennette's Pier", location: "Nags Head", status: "Open", features: "Longest OBX Pier, Concrete Structure, NC Aquarium Affiliation, ADA Accessible", length: "1,000 ft", fee: "$14", rental: "$12.00", license: "Yes", contact: "(252) 255-1501", region: "Outer Banks Piers" },
+            { id: "nags-head-pier", name: "Nags Head Pier", location: "Nags Head", status: "Open", features: "Second Oldest OBX Pier, \"You Hook 'Em – We Cook 'Em\" Service, Tiki Bar", length: "750 ft", fee: "$15.00", rental: "$15.00", license: "N/A", contact: "(252) 441-5141", region: "Outer Banks Piers" },
+            { id: "kitty-hawk-pier", name: "Kitty Hawk Pier", location: "Kitty Hawk", status: "Open", features: "Hilton Garden Inn Affiliation, Wedding Venue", length: "N/A", fee: "N/A (Less for Hilton Guests)", rental: "N/A", license: "N/A", contact: "N/A", region: "Outer Banks Piers" },
+            { id: "avalon-pier", name: "Avalon Pier", location: "Kill Devil Hills", status: "Open (Rebuilding Status)", features: "PierCam, BeachBar, Snack Shack, Retail Shop, Cleaning Stations", length: "700 ft", fee: "$17.50", rental: "$8.00", license: "Yes", contact: "N/A", region: "Outer Banks Piers" }
+        ];
+        
+        const pierDetailsData = {
+            "ocean-isle-beach-pier": {
+                name: "Ocean Isle Beach Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features, History</h4>
+                    <p>The Ocean Isle Beach Pier, a substantial 968-foot wooden structure, has served as a prominent landmark on the island since its construction in 1957 by Odell and Virginia Williamson. Situated centrally on the 7-mile island, at the terminus of Causeway Drive, the pier's management prioritizes upholding family traditions and honoring its rich history while concurrently implementing updates to cater to contemporary tourists. The pier complex encompasses a pier grill, a gift shop, an arcade featuring a large, modern, and air-conditioned room, and an ice cream parlor renowned for its Blue Bell hand-dipped and soft-serve ice cream. Anglers benefit from strategically placed wooden benches along the pier's entire length, providing comfortable spots for casting and observation.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring (March-May):</strong> Water temperatures 60-75°F. Spanish Mackerel, Bluefish. Inshore: Redfish, Speckled Trout. King Mackerel, Cobia (Apr-Jun).</p>
+                    <p><strong>Summer (June-August):</strong> Water temperatures 75-85°F. Peak for Flounder, Red Drum, Sharks. Spanish & King Mackerel prevalent.</p>
+                    <p><strong>Fall (September-November):</strong> Water cools to 65-75°F. Bull Red Drum migration (peaks Oct). "Smoker" King Mackerel (Oct-Nov). Speckled Trout, Flounder, Spanish Mackerel (until Oct). Sharks (thru Nov).</p>
+                    <p><strong>Winter (December-February):</strong> Water temperatures 45-60°F. Speckled Trout, Puppy Drum/Redfish, Black Drum, Black Sea Bass (nearshore reefs). Year-round inshore: Redfish, Speckled Trout, Flounder, Black Drum.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Recent reports: "nice hard pulling black drum," "nice speckled trout." Also: Redfish, Flounder, Tiger Sharks (7-foot specimen fought), Hammerheads, Sharpnose, Sandbar sharks, Gray Trout, Spanish Mackerel, Sea Bass. Live shrimp & menhaden attract predators.</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>General:</strong> Live shrimp, menhaden. <strong>Inshore (Redfish, Trout, Flounder):</strong> Lures. <strong>Kids' trips:</strong> Live bait for Black Drum. <strong>Nearshore/Offshore:</strong> Trolling for King Mackerel, Spanish Mackerel, Cobia (spring-fall). Bottom-fishing year-round. <strong>Mahi Mahi:</strong> Smaller deep-diving lures for trolling. Shark fishing charters available (May onwards).</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time of Day:</strong> Morning best in summer. <strong>Wind:</strong> SE improves fishing, SW good summer. NW pushes bait. North often decreases success. <strong>Tides/Current:</strong> Incoming = cleaner water, active fish. Outgoing = concentrates fish. Slack = slower. Strong current = predictable fish locations. Tubbs Inlet: moving tides. OIB Bridge: moderate current. <strong>Barometric Pressure:</strong> Rising = improves. Falling = pre-storm feeding frenzy. Stable = consistent. Extreme changes = fish shut down. <strong>Ideal Weather:</strong> Light/moderate winds (5-15 knots), stable/rising barometer, clear/partly cloudy, moderate current.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p>Specific pier fees/hours not detailed in source, but charter prices: 2hr kids $275, 4hr inshore $450, 4hr nearshore/shark $550. Consult official resources.</p>
+                `
+            },
+            "kure-beach-pier": {
+                name: "Kure Beach Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features (Oldest Pier Status)</h4>
+                    <p>Oldest fishing pier on Atlantic Coast (original 1923). Current structure rebuilt multiple times. After Hurricane Bertha (1996), elevated to 26ft above ocean, three-piling base. Length: 711 ft. Features: concession stand, arcade, souvenir store, restrooms. Located in business district near Ocean Front Park.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring:</strong> Red Drum, Speckled Trout, Bluefish, Spanish Mackerel. Offshore: Yellowfin Tuna, Blackfin Tuna, Wahoo. Recent: Bonito, Black Sea Bass, Sheepshead (wrecks), Red Drum, Black Drum.</p>
+                    <p><strong>Summer:</strong> Flounder, Red Drum, Spotted Seatrout (inshore). Offshore: Mahi Mahi, Wahoo, Tuna. Pier: King Mackerel, Spanish Mackerel.</p>
+                    <p><strong>Fall:</strong> Peak Redfish & Speckled Trout. Strong Flounder. Offshore: King Mackerel, Wahoo, Sailfish. Inshore: Virginia Mullets, Bluefish, Pompano, Red Drum (up to 42-inch), Spanish Mackerel, Black Drum, Gray Trout, Spots.</p>
+                    <p><strong>Winter:</strong> Inshore: Black Drum, Redfish. Speckled Trout (deeper inshore, Oct-Dec). Offshore: Bluefin Tuna. Virginia Mullets consistent.</p>
+                    <p><strong>Year-round:</strong> Black Drum, Redfish, Bluefish, Sheepshead, Sea Mullet, Croaker, Whiting.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Fall 2024 reports: numerous Bluefish, Virginia Mullets (14-19 inches), Pompanos, Red Drum (42-inch specimen). Black Drum, Gray Trout, Sharks. "lots of VA Mullets," "Blues are large, several have been 20 inches."</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>General:</strong> Live/cut bait on bottom rigs, small weights. <strong>Specific Baits:</strong> Bloodworms, sandfleas (VA Mullets, Black Drum), salted mullets, shrimp. <strong>Techniques:</strong> Casting, trolling, jigging. Trolling (lures/live bait) for Mahi, King Mackerel, Wahoo, Yellowfin. Deep dropping/jigging offshore. <strong>Hotspots:</strong> Snow's Cut (Redfish, Flounder, Sheepshead). Artificial reefs/wrecks (Liberty Ship Wreck for Snapper, Sea Bass, Grouper).</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time of Day:</strong> "Low light" (twilight) best, esp. with major/minor bite times. <strong>Tides:</strong> Incoming = cleaner water, active fish. Early morning high to late afternoon low successful. <strong>Barometer:</strong> Rising = better. <strong>Weather:</strong> Mild, fall gray skies pleasant. Check marine forecasts, radar, wind shifts, cloud patterns.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Fees:</strong> Strolling free. Fishing: modest daily fee. Higher for King Fishing (multi-rod) & shark fishing. <strong>Hours:</strong> Pier/facilities open 24/7 (Apr 1 - Nov 30). <strong>Amenities:</strong> Concession, arcade, souvenir store, restrooms, nearby restaurants. Webcam. <strong>Regulations:</strong> No outside alcohol. Hosts tournaments (King Mackerel, Cape Fear Disabled Sportsman's Fishing Tournament).</p>
+                `
+            },
+             "bogue-inlet-pier": {
+                name: "Bogue Inlet Pier (Emerald Isle)",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features, History, Notable Records</h4>
+                    <p>Family-owned since 1971. Built after Emerald Isle's 1957 incorporation. Rebuilt multiple times (Diane '84, Fran '96, Irene '11). NC State Record Sea Mullet (3 lb. 8 oz., 1971). Amenities: bait/tackle shop, food/drinks, beach gear, restrooms, Surf's Up Grill & Bar.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring (Mar-May):</strong> Spanish Mackerel, Pompano, Bluefish, Sea Mullet, Gray Trout, Spots, Black Drum, Croakers. Arrival of King Mackerel, Cobia, Tarpon. Redfish/Flounder active post-Memorial Day. Spanish Mackerel peak Apr/May.</p>
+                    <p><strong>Summer (Jun-Aug):</strong> Large Bluefish, Spanish Mackerel, Sea Mullet, Gray Trout, Spots, Pompano. King Mackerel, Cobia, Tarpon common. Red Drum bite intensifies.</p>
+                    <p><strong>Fall (Sep-Nov):</strong> King Mackerel peak migration. Red Drum, Flounder, Pompano, Sea Mullet, Bluefish, Black Drum, Spots, Speckled Trout, Puppy Drum active.</p>
+                    <p><strong>Winter (Dec-Feb):</strong> Red Drum, Flounder, Speckled Trout, Puppy Drum viable.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>May 2025 reports: Ladyfish (to 2 lb. 13 oz.), Spanish Mackerel (to 4 lb. 15 oz.), Bluefish ("Hatteras Blue" to 10 lb. 5 oz.), Barracuda (21 lb. 13 oz.), Gray Trout (to 1 lb. 5 oz.), Pompano, Sea Mullet, Black Drum (to 4 lb. 13 oz.). "big slot and over slot Red Drum."</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>General:</strong> Live bait (mullet, shrimp for Red Drum/Flounder). Shrimp/sand fleas (Pompano/Mullet). Shrimp for bottom fishing. <strong>Lures:</strong> Smaller deep-diving (Mahi trolling), jigs (small Spanish Mackerel/Bluefish). <strong>Techniques:</strong> Trolling (King Mackerel), bottom fishing (Sea Mullet, Croakers, Pompano, etc.). <strong>Hotspots:</strong> Bogue Sound, Emerald Isle Woods Park, "The Point" (Flounder fall, Red Drum evening).</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p>May water temp: 70-75°F. Warming trend for Cobia. Recent: "amazing weather weekend," brief rain, cooler NE wind anticipated, sunny forecast.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>2025 Fees:</strong> Daily fishing $17.50 (2 rods, kids 6/under free). Season pass $350. 3-day pass $47.50. Rod rental $10/6hrs. "Total Package" $38.68. <strong>Parking:</strong> Free with fishing pass. Beach parking $5/hr (max $30, Apr 15-Sep 1). Free 10-min drop-off/take-out. Surf's Up dining = 2hrs free. Ice cream = 60min free. <strong>Hours:</strong> Open for 2025 season. <strong>License:</strong> Not required (blanket license).</p>
+                `
+            },
+            "jolly-roger-pier": {
+                name: "Jolly Roger Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features</h4>
+                    <p>Built 1954 by Lewis Orr. 850 ft long. Good for fishing & strolling. Fully lit at night. Jolly Roger Inn guests: free walking, discounted fishing. Facilities: tackle shop (pier, surf, sound, offshore), rod rentals, ice, snacks, beverages.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring (Mid-Mar-May):</strong> Virginia Mullet (whiting), Black Drum. Bluefish (1-3 lbs, then "chopper blues" 5-20 lbs late Mar). Puppy Drum, Flounder (around Apr 1). Spanish Mackerel (1-5 lbs, late Apr). May: peak spring, Cobia, King Mackerel.</p>
+                    <p><strong>Summer (Jun-Aug):</strong> King Mackerel, Spanish Mackerel, Bluefish, Flounder, Puppy Drum, Black Drum, Sheepshead, Pompano, Spots, Summer Whiting, Cobia. Tarpon (100-120 lbs, esp. Jul-Aug).</p>
+                    <p><strong>Fall (Sep-Nov):</strong> Drum (slot/over-slot), Pompano, Blues, Virginia Mullet, Black Drum, Jumping Mullet. Spanish Mackerel, Speckled Trout, Flounder, Spots remain active.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Historic reports (2010-18): King Mackerel (20-40 lbs), Tarpon (60-100 lbs, 66 lb landed), Puppy Drum (to 8 lbs), Sheepshead (8 lb 15 oz), Spanish Mackerel (4.5-7.2 lbs), Black Drum (7 lbs, 8.2 lbs), Flounder (to 3.5 lbs). Reports of "tons of mullet," "good run of blues," "lots of Spanish."</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>VA Mullet/Black Drum:</strong> Fresh shrimp (best), artificial shrimp, clams, bloodworms on bottom rigs. <strong>Bluefish/Spanish:</strong> Gotcha-plugs, Clarkspoons, Diamond Jigs (Spanish); cut bait/lures (blues). Quick retrieve for Spanish. <strong>Puppy Drum/Flounder:</strong> Berkley Gulp, bucktails, fresh cut bait, live minnows, live shrimp. <strong>Cobia/King Mackerel:</strong> Live baits (bluefish, menhaden, grass shad), live bait rig for Kings. <strong>Spots/Mullet:</strong> Bloodworms (night). <strong>General:</strong> Drop near pilings. Fish up-current side. "Pier trolling," "pier chumming." Bridge net for big fish.</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (early AM, late PM, after dark) for Spanish Mackerel, summer months. <strong>Wind:</strong> S/SW for mullet. SE-SW (0-20mph) for Spanish. Easterly winds clear water, concentrate bait. <strong>Water Clarity:</strong> Good for Spanish Mackerel. Tide times available, specific optimal stages not detailed.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>2025 Fees:</strong> Daily fishing $16 (2 rods), King Fishing $27 (3 rods). Spectator $2. Multi-day/weekly/season passes available. Kids 13/under half-price. <strong>Hours:</strong> Seasonal. Apr-May: 7am-dark. Jun-Mid Sep: 6am-midnight. Thereafter: 7am-midnight. Opens weekend before Easter, closes weekend after Thanksgiving. <strong>License:</strong> Blanket license covers customers.</p>
+                `
+            },
+            "surf-city-pier": {
+                name: "Surf City Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features</h4>
+                    <p>Topsail Island's first ocean pier (1948). Lore family owned since 1973. Rebuilt after Hurricane Fran (1996), reopened Aug 1997. 937 ft long, 40-ft octagon end. 2 large fish cleaning stations (fresh water, lighting). Bait, tackle shop, souvenirs, grill, ice cream, covered dining.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring (Mar-May):</strong> Sheepshead, Spot, Black Drum, Red Drum, Spanish Mackerel, Bluefish, Trout, Flounder. Also: Albacore, Blowfish, Croaker, Sea Mullet, Speckled Trout. Cobia (May-Jul), King Mackerel (May-Oct), Pompano (Apr-Sep).</p>
+                    <p><strong>Summer (Jun-Aug):</strong> Flounder, Spanish Mackerel, King Mackerel, Sharks, Black Drum. Barracuda (Jul-Sep), Jack Crevalle (summer), Tarpon (Jul-Sep).</p>
+                    <p><strong>Fall (Sep-Nov):</strong> Red Drum, Flounder, Spanish Mackerel, King Mackerel, Sharks. Also: Albacore, Blowfish, Bluefish, Croaker, Gray Trout, Puppy/Red Drum, Sea Mullet, Sheepshead, Spanish Mackerel, Speckled Trout, Spot.</p>
+                    <p><strong>Winter (Dec-Feb):</strong> Black Drum primary. Red Drum, Black Drum in creeks.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Black Drum in local creeks (1-6 lbs). "Pier Records" section would have more details.</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>VA Mullet/Black Drum:</strong> Fresh shrimp (optimal), artificial shrimp, clams on bottom rigs. <strong>Bluefish:</strong> Cut bait, artificial lures. <strong>Spanish Mackerel:</strong> Gotcha-plugs, Clarkspoons, Diamond Jigs. <strong>Red/Black Drum:</strong> Shrimp on Carolina rig, chartreuse curlytail jig (¼ oz). Live/cut bait. <strong>Lines/Rigs:</strong> 15-25lb mono / 30-50lb braid (bottom). 10-15lb mono / 20-30lb braid (casting). 25lb fluoro leaders. Small floats above hook. <strong>Hooks:</strong> Circle hooks. Treble hooks discouraged. <strong>Sinkers:</strong> 3oz+ pyramid or spider leads. Bright painted leads as attractors. <strong>Techniques:</strong> Slow creep/hop rig. Drop near pilings. Pier trolling, pier chumming. <strong>Hotspots (winter drum):</strong> Topsail/Surf City creeks (Harbour Village Marina, Olde Point Creek), dredged channels, dark bottoms, docks, bulkheads.</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (twilight). Mid-day for drum in creeks (warmer water). <strong>Tides (creek drum):</strong> 2hrs before to 2hrs after low tide. Bottom of tide to halfway up (warmer water). Check forecasts.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>2025 Fees:</strong> 1 rod $12 (24hr), 2 rods $24 (24hr), crab trap $12, cast net $12 (when permitted). King Fishing $36 (3 rods, day only). Parking free for pier users. <strong>Rod Rental:</strong> $12 + $30 cash deposit. <strong>Hours:</strong> Mid-Mar to Dec 1 (24/7). Grill hours seasonal. Has "OUR RULES."</p>
+                `
+            },
+            "seaview-fishing-pier": {
+                name: "Seaview Fishing Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features (Longest Pier)</h4>
+                    <p>Longest fishing pier on NC coast. Facilities: pier house, motel, restaurant (online ordering), shop. Live webcams (pier/beach), live weather, tide charts.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p>Detailed seasonal patterns not provided. Hosts common coastal species. Suitable for "King Mackerel or bottom fishing."</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Specific size/abundance data not provided. Consult local reports/pier.</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>General Bait:</strong> Fresh shrimp (best), squid, clam, shedder crab, bloodworms. <strong>Rigs:</strong> Two hooks on 6-inch wires off main line. Sabiki rigs + shrimp (mackerel, smelt). <strong>Techniques:</strong> Drop near pilings. Fish up-current side. Small lures (bucktails, spoons) for young bluefish ("snappers"). <strong>Hotspots (area):</strong> Inshore structures (Red/Black Drum, Sheepshead). Nearshore structures (10-20 miles) for King Mackerel. Deeper nearshore wrecks (Black Sea Bass, Grunts, Snapper, Grouper, Triggerfish, Amberjack, Barracuda).</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (twilight), esp. with major/minor bite times. <strong>Weight:</strong> 1-3 oz, adjust to current. Tide charts available. Check live weather/wind.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Fees:</strong> Spectator $2/day. Fishing $17/day (2 poles, expires 6AM). Beach Access $5/day. Pole Rental $8/day. Season Passes (Nov 10, '24 - Dec 31, '25): Single Fishing $275, King Fishing $425. <strong>Hours:</strong> 24/7. <strong>Amenities:</strong> Tackle/Convenience Shop (ice, apparel, ATM), motel, restaurant. Specific regulations not detailed.</p>
+                `
+            },
+             "avon-fishing-pier": {
+                name: "Avon Fishing Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features</h4>
+                    <p>Built 1963. Approx. 600 ft long. Popular for anglers & sightseers (late spring - early fall). Good for watching surfers. Snack & bait shop nearby. Frequented Cape Hatteras destination.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring (Late):</strong> Big Drum, Puppy Drum, Bluefish, Sea Mullet, Cobia (up to 44 lbs, 2 miles offshore). Blow Toads (Pufferfish), Sharks.</p>
+                    <p><strong>Summer:</strong> Citation-sized Red Drum, Cobia.</p>
+                    <p><strong>Fall (Early):</strong> Top: Atlantic Croaker, Blacktip Shark, Pigfish. Others: Spot Croaker, Ocean Sunfish, Black Drum, Short-tail Stingray, Bluefish, Southern Kingcroaker. Speckled Trout, Red Drum heavy in sound.</p>
+                    <p><strong>Winter:</strong> Puppy Drum, Black Drum (beach). Speckled Trout (inshore). Offshore: Bluefin Tuna (up to 500 lbs).</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Top reported: Atlantic Croaker, Blacktip Shark, Pigfish. Others: Spot Croaker, Ocean Sunfish (99 in, 140 lbs reported!), Black Drum (21 in, 3 lbs), Stingray (19 in, 10 lbs), Bluefish, S. Kingcroaker (9 in, 1 lb). Recent: "nice Spanish caught on a Got-Cha plug," "nice 8 and 1/2 lb Sheepshead."</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>General Bait:</strong> Live bait (Puppy/Black Drum, winter). Shrimp, mullet (warmer water), fish bites. <strong>Lures:</strong> Got-Cha plugs (Spanish Mackerel), metal lures (Bluefish). Berkley Gulp (white/chartreuse for Red Drum/Speckled Trout). <strong>Tuna Techniques:</strong> Greensticking, trolling (Ballyhoo + Sea Witch), vertical jigging (live bait), chunking. <strong>Hotspots:</strong> "The point," Ramp 43 (Blow Toads, Drum, Bluefish, Sea Mullet, Sharks). Jetties (Sheepshead, Drum, Sea Mullet).</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (twilight, sunrise/sunset), esp. with major/minor bite times. New Moon phase productive. Tide times available. Check weather; strong winds can affect pier access.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Hours:</strong> Typically 6 am - 10 pm. <strong>Amenities:</strong> Snack & bait shop nearby. <strong>License:</strong> Usually not required (blanket license covers most piers, including Avon).</p>
+                `
+            },
+            "rodanthe-pier": {
+                name: "Rodanthe Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features</h4>
+                    <p>Established fishing tradition. 700 ft long. Family-friendly (angling/sightseeing). Pier House: bait/tackle, equipment, rentals, refreshments. Live webcam.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring (Mar-May):</strong> Bluefish, Spanish Mackerel, Tarpon.</p>
+                    <p><strong>Summer (Jun-Aug):</strong> Tarpon, Bluefish, Spanish Mackerel, Croaker, Spot, Mullet, Cobia, Drum. Speckled Trout active.</p>
+                    <p><strong>Fall (Sep-Nov):</strong> Speckled Trout, Redfish. Bluefish, Pompano, Sea Mullet.</p>
+                    <p><strong>Winter (Dec-Feb):</strong> Striped Bass (Nov-Dec, Jan-Apr). Year-round: Bluefish, Flounder, Mackerel, Drum, Sharks.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Top reported: Atlantic Croaker (16 logged), Bluefish (7), Sheepshead (5). Notable: Sheepshead (20 in, 9 lbs), Atlantic Croaker (7 in, 3 oz). Recent: "nice ones for dinner" (Speckled Trout), "nice redfish action."</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>Pier General:</strong> Simple rigs, appropriate weights/hooks (1/2-1 oz egg sinker for calm). <strong>Surf Fishing:</strong> Bloodworms (1/2-3/4 in pieces) for panfish (spot, croaker, flounder, pompano, sea mullet) on two-hook mono bottom rigs, small gold aberdeene hooks. Sand fleas also good. Spoons (bluefish, Spanish). Cut bait (squid, mullet for redfish, sea mullet). <strong>Sound Fishing:</strong> Medium-action rod, 2500 reel. 1/4 oz jig heads + soft plastics (Gulp, Voodoo Shrimp) under popping cork. Cut bait attracts variety. <strong>Hotspots:</strong> Cape Point (Buxton) for Bluefish, Red Drum, Flounder. Hatteras Inlet (Trout, Flounder, Striped Bass, kayak fishing). Pamlico Sound (Drum, Flounder, Trout, calm waters).</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (twilight), esp. with major/minor bite times. Early AM/evening for trout. Sunrise/sunset for bluefish/Spanish. Tide times available. Check local weather.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Fees:</strong> Daily: Kids (≤10) $10, Ages 11+ $15 (incl. pin rigging). Sightseeing $2/day. Pole rental $12/day. Weekly: $70. Family of 4 weekly $200 (+$45/add. person). Military/Seniors (62+) $12/day. Unlimited passes for rental houses. <strong>Hours:</strong> Seasonal. Apr-May: 7am-dark. Jun-Mid Sep: 6am-midnight. Thereafter: 7am-midnight. Opens weekend before Easter, closes weekend after Thanksgiving. <strong>License:</strong> Not required (blanket license).</p>
+                `
+            },
+            "outer-banks-fishing-pier": {
+                name: "Outer Banks Fishing Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features</h4>
+                    <p>600 ft long. Excellent fishing, family-friendly. South Nags Head (milepost 18.5), closest to Oregon Inlet. Fully lighted, 24/7 operation. Pier house: tackle shop, video games, rod/reel rentals. Fishheads Bar & Grill (breakfast, lunch, dinner, 32+ beers, live music).</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Year-round:</strong> Flounder, Cobia, Drum. Spot, Mullet, Puppy Drum consistent.</p>
+                    <p><strong>Spring:</strong> Sea Mullet, small Puppy Drum.</p>
+                    <p><strong>Summer:</strong> Bluefish, Spanish Mackerel, Flounder, Spot, Croakers, Trout, Amberjack, Spadefish, Tuna, Dolphin.</p>
+                    <p><strong>Fall:</strong> Productive for Red Drum, Speckled Trout. Large Bluefish, Trout, Red Drum (40+ lbs).</p>
+                    <p><strong>Winter:</strong> Striped Bass primary.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Reports: "numerous drum over 40lbs" (fall). Spanish Mackerel, Bluefish, Croaker, King Mackerel common on OBX piers.</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>Bait:</strong> Fresh/frozen shrimp, mullet strips, bloodworms, sand fleas, menhaden, squid, clams, oysters. <strong>Lures:</strong> Metal spoons, bright popping lures, jerk jigger baits, lead-headed plastic grubs (Bluefish). Trolling (Tuna, Dolphin). <strong>Rigs:</strong> Pyramid weight (2-4 oz) for surf fishing (holds in current). <strong>Techniques:</strong> Cast/drift live baits around currents, pitch lures, toss baits/hardware near pilings, water color/depth changes. Chumming. <strong>Hotspots:</strong> Piers, inlets, sloughs (troughs parallel to shore), sandbars.</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> Dawn/dusk most productive. <strong>Tides:</strong> Active fish during moving water (high/low tide). Pitch baits into channels. <strong>Weather:</strong> Mild, breezy days ideal. Approaching storm fronts (falling barometer) can trigger feeding. Windy conditions churn up food.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Fees:</strong> Daily, weekly, weekend passes. Senior discounts. <strong>Hours:</strong> 24/7. <strong>Amenities:</strong> Tackle shop, video games, rentals. Fishheads Bar & Grill. <strong>License:</strong> Not required (blanket license).</p>
+                `
+            },
+            "jennettes-pier": {
+                name: "Jennette's Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features (Concrete Structure, NC Aquarium Affiliation)</h4>
+                    <p>Built 1939. Modern concrete, 1,000 ft long (longest OBX pier). Operated by NC Aquarium Society (educational mission). Classrooms, programs, alt. energy demos, live animal exhibits, snack bar, tackle shop, displays, special events venue. Fully ADA accessible.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring (Mar-May):</strong> Bluefish, Spanish Mackerel, Flounder, Sheepshead, Atlantic Bonito, Pin, Pigfish, Sea Mullet. Puppy Drum present.</p>
+                    <p><strong>Summer (Jun-Aug):</strong> Red Drum, Flounder, Bluefish, Sharks, Cobia, King Mackerel, False Albacore, Black Seabass.</p>
+                    <p><strong>Fall (Sep-Nov):</strong> Red Drum, Speckled Trout (prime). Mullet abundant.</p>
+                    <p><strong>Winter (Dec-Feb):</strong> Mullet. Puppy Drum reported.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>May 2025 reports: Bluefish, Spanish Mackerel, Flounder, Sheepshead (8-pound+ specimen), Atlantic Bonito, Pin, Pigfish, Sea Mullet. Dec reports: "Tons of Mullet Under Pier!"</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>Lures:</strong> Got-Cha plugs (Bluefish). <strong>Techniques:</strong> Sight casting to King Mackerel & Cobia from pier end.</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (twilight). Daily fishing reports provide tide, weather (wind, water/air temp, clouds).</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Fees:</strong> Adult fishing $14, Kids (≤12) $7. Walk-on: Adult $2, Kid $1. Rod rental $12, pin-rig $8. Multi-day/annual passes available. <strong>Hours:</strong> Year-round, seasonal. Dec-Mar: 9am-5pm. Nov/Apr: 7am-9pm. May-Oct: 6am-10pm. Closed Thanksgiving/Christmas. <strong>Amenities:</strong> Tackle shop (sundries, souvenirs, gifts), educational programs, exhibits, snack bar, meeting facilities. <strong>License:</strong> Blanket license covers anglers. Handicap accessible.</p>
+                `
+            },
+            "nags-head-pier": {
+                name: "Nags Head Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features ("You Hook 'Em – We Cook 'Em" Service)</h4>
+                    <p>750 ft long. Second oldest OBX pier (1947). "You Hook 'Em – We Cook 'Em" service by Pier House Restaurant. Capt. Andy's Oceanfront Tiki Bar and Grill. Full-service tackle shop, rod/reel rentals, ample parking.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring:</strong> Bluefish, Trout, Sea Mullet, Puffers. Cobia, Red Drum, Spanish Mackerel active.</p>
+                    <p><strong>Summer:</strong> Flounder, Red Drum, Bluefish, Marlin, King Mackerel, Tarpon. Offshore: Yellowfin Tuna, Mahi Mahi, Wahoo, Billfish.</p>
+                    <p><strong>Fall (Late Summer/Early):</strong> Spot, Trout, Bluefish, Spanish Mackerel, Red Drum, Puppy Drum, Black Drum. Yellowfin Tuna, Mahi Mahi, Wahoo, King Mackerel.</p>
+                    <p><strong>Winter:</strong> Black Drum, Red Drum, Speckled Trout. Bluefin Tuna, Striped Bass.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>May 2025 reports: Yellowfin Tuna, Cobia, Sea Bass, Red Drum, Bluefish, Spanish Mackerel, Triggerfish, Sand Tiger Sharks, Moonfish. Past: Red Drum, 25-inch Puppy Drum, 100-lb Tarpon, King Mackerel, Pompano (to 3 lb 9 oz), Spanish Mackerel (to 5 lb 13 oz).</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>General:</strong> Fresh bait, bottom rigs, topwater lures. <strong>Specific Baits:</strong> Peeler/blue crabs (Red Drum on shoals), fresh clam/cut bait (Red Drum), fresh clam (Black Drum). Crabs, shrimp, clams (Tautog). Bloodworms, squid, cut fish (Gray Trout/Weakfish). Bloodworms/Fishbites (Spot). Shrimp/minnows under float (Speckled Trout). <strong>Lures:</strong> Metal squid, plugs, spinners, spoons, jigs (Striped Bass). Tiny, shiny metal lures/jigs, quick retrieve (Spanish Mackerel). <strong>Techniques:</strong> Kite fishing (Tuna), bottom fishing on wrecks. Sight casting (Red Drum), bouncing baits (Puppy Drum). <strong>Hotspots:</strong> Oregon Inlet, Albemarle Sound (Striped Bass, Red Drum, etc.). Advance II Wreck (Triggerfish, Spadefish, Cobia, etc.). "Tuna Hole" (Yellowfin, Bluefin, Billfish).</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (sunrise/sunset). Pier open 24hrs for fishing. Tide times available. Summer: warm, clear waters. Check local weather.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Fees:</strong> Sightseeing $2.75. Day pass $15. 3-day $42. 7-day $95. Season: $400 (individual), $525 (couple). Kids <12 $12. Pin rig $30. Rod rental $15/day. <strong>Hours:</strong> 7 days/week, 5am-midnight (weather permitting). <strong>Amenities:</strong> Tackle shop (fresh bait, rigs, lures, rods, reels, advice), rentals, parking. Pier House Restaurant, Capt. Andy's Tiki Bar. Specific regulations not detailed.</p>
+                `
+            },
+            "kitty-hawk-pier": {
+                name: "Kitty Hawk Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features (Hilton Garden Inn Affiliation)</h4>
+                    <p>Owned/operated by adjacent Hilton Garden Inn. Historic (built 1953), restored 2006 (after Hurricane Isabel 2003). Popular for weddings/private events. Open for public fishing (rates may be less for Hilton guests), can be closed for private events.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p><strong>Spring (Mar-May):</strong> Speckled Trout, Black Sea Bass, Triggerfish, Slot Red Drum. Bluefin Tuna "busting around the boat."</p>
+                    <p><strong>Summer (Jun-Aug):</strong> Grunts, juvenile Cobia, Gray Trout, Triggerfish, Flounder. Red Drum, Kingfish, Rockfish, Tarpon.</p>
+                    <p><strong>Fall (Oct-Apr):</strong> Prime for Striped Bass.</p>
+                    <p><strong>Winter:</strong> Striped Bass.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>May 2025 reports: "Pretty Specs" (Speckled Trout), "Lots of catch and release Sea Bass," "trigger and slot red drum." Past: Largemouth Bass, Red Drum, Stripers.</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>General Gear:</strong> Lighter rod/reel (4000-6000 reels, fast/med-fast carbon/graphite rods) for inshore. Braided lines popular. <strong>Baits:</strong> Fresh/frozen shrimp, mullet strips, bloodworms, sand fleas. Live baiting (minnows/mullet). Squid (flounder, attracts crabs). <strong>Lures:</strong> Jigs, soft plastics, topwater, crankbaits. Spoons/heavy lures (Striped Bass). <strong>Techniques:</strong> Casting, jigging, trolling. Focus under pier & dozen yards out. Avoid S side unless surface fishing (debris). Cast to bridge bumpers at E end for larger species. <strong>Hotspots:</strong> Albemarle/Currituck Sounds, Kitty Hawk Bay (Sheepshead, Mullets, Bass, Flounder). Bob Perry Rd boat launch. Deep slough N of pier. E end of pier.</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (twilight). <strong>Tides:</strong> Impact fish behavior. Tide times available. Pier consistent for surfing regardless of tide (stable depth). <strong>Weather:</strong> Mild, breezy best. Overcast/rainy or sunny/clear can be good for different species. Approaching storms (falling barometer) can trigger feeding. Windy waves churn up food.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Hours:</strong> Typically 8am - 10pm. Owned by Hilton Garden Inn, rates may be less for guests. Can be closed for private events. Details on amenities/regulations not extensively provided.</p>
+                `
+            },
+            "avalon-pier": {
+                name: "Avalon Pier",
+                content: `
+                    <h4>Pier Profile: Length, Unique Features (Rebuilding Status)</h4>
+                    <p>Mile Post 6, Kill Devil Hills. Cherished for 60+ years. Damaged by Hurricane Dorian (Fall 2019), lost 215 ft. Rebuilding ongoing (delays: permits, COVID, lumber prices, labor shortage). "100% commitment" to rebuild. Length: 700 ft. Amenities: PierCam, BeachBar (live music), Snack Shack, Shop, 4 cleaning stations.</p>
+                    <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
+                    <p>Water temp is primary factor. <strong>Spring:</strong> Bluefish, Spanish Mackerel, Croaker, occasional King Mackerel. Spot, Mullet, Puffers, Speckled Trout, Puppy Drum.</p>
+                    <p><strong>Summer:</strong> Bluefish, Cobia, King Mackerel (warm water).</p>
+                    <p><strong>Fall (Mid-Sep - End Oct best):</strong> Water warm. Cobia, King Mackerel, Spanish Mackerel, Pompano. Other migratory fish as water cools. Bluefish consistent. Year-round variety, activity dictated by temp.</p>
+                    <h4>Common Catches: Typical Sizes & Abundance</h4>
+                    <p>Bluefish: "very common catch" (spring, summer, fall). Flounder season 2022: Sep only. Cobia: "one of the bigger fish landed." Others: Gray Trout, Croaker, King Mackerel, Mullet, Spanish Mackerel, Striper, Pompano, Speckled Trout, Red (Puppy) Drum, Spot.</p>
+                    <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
+                    <p><strong>Bait:</strong> Sells frozen shrimp, mullet, squid; seasonal live bloodworms. Artificials: FishBites, Gotcha Plugs. <strong>Lures:</strong> Gotcha Plugs. Plugs/bucktails (blues, Spanish, Cobia, King Mackerel) requiring constant movement. <strong>Rigs:</strong> Rentals usually two-hook bottom rig. "Live bait rig" for Cobia. <strong>Technique:</strong> Sight casting (bucktail) for Cobia. End of pier = "No Bottom Fishing" (for active lure fishing, safety).</p>
+                    <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
+                    <p><strong>Time:</strong> "Low light" (right after sunrise, right before sunset) most productive. Water temp, winds, tides significant. Tide times available. Fall best, but hurricane season.</p>
+                    <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
+                    <p><strong>Fees:</strong> Adult (18+) $17.50/day, Child (≤17) $6/day. 3-day $45, 7-day $90. Season: Indiv $300, Couple $500. Sightsee $2/day. Rod rental $8/day (+ admission/bait). King Fishing (live bait rigs) +$19/day. <strong>Parking:</strong> Free with fishing pass. <strong>Hours:</strong> Mar-Nov: 6AM-10PM (Mon-Thu), 6AM-Midnight (Fri-Sat), 6AM-10PM (Sun). Winter: ~11AM-10PM (call ahead). <strong>Regulations:</strong> No NC Saltwater License needed (blanket). Limit 3 rods/person. No active shark fishing (chumming, large rods/fish heads). Adhere to state bag/size limits. No outside alcohol. Nets available. No crabbing.</p>
+                `
+            }
+        };
+
+        const pierComparisonData = [
+            { pier: "Ocean Isle Beach Pier", spring: "Spanish Mackerel, Bluefish, Redfish, Speckled Trout, King Mackerel, Cobia", summer: "Flounder, Red Drum, Sharks, Spanish Mackerel, King Mackerel", fall: "Bull Red Drum, Smoker King Mackerel, Speckled Trout, Flounder, Spanish Mackerel, Sharks", winter: "Speckled Trout, Puppy Drum/Redfish, Black Drum, Black Sea Bass", baitLures: "Live shrimp, menhaden, lures (inshore), smaller deep-diving lures (Mahi Mahi)", techniques: "Lure fishing (inshore), trolling (nearshore/offshore), bottom-fishing (year-round), shark charters" },
+            { pier: "Kure Beach Pier", spring: "Red Drum, Speckled Trout, Bluefish, Spanish Mackerel, Bonito, Black Sea Bass, Sheepshead, Tuna", summer: "Flounder, Red Drum, Spotted Seatrout, Mahi Mahi, Wahoo, Tuna, King Mackerel, Spanish Mackerel", fall: "Redfish, Speckled Trout, Flounder, King Mackerel, Wahoo, Sailfish, Virginia Mullets, Bluefish, Pompano, Red Drum, Spanish Mackerel, Black Drum, Gray Trout, Spots", winter: "Black Drum, Redfish, Bluefin Tuna, Speckled Trout, Virginia Mullets", baitLures: "Live/cut bait, bottom rigs, bloodworms, sandfleas, salted mullets, shrimp, lures (trolling, deep dropping, jigging)", techniques: "Casting, trolling, jigging, bottom fishing, targeting structures (Snow's Cut, artificial reefs)" },
+            { pier: "Bogue Inlet Pier (Emerald Isle)", spring: "Spanish Mackerel, Pompano, Bluefish, Sea Mullet, Gray Trout, Spots, Black Drum, Croakers, King Mackerel, Cobia, Tarpon, Redfish, Flounder", summer: "Large Bluefish, Spanish Mackerel, Sea Mullet, Gray Trout, Spots, Pompano, King Mackerel, Cobia, Tarpon, Red Drum", fall: "King Mackerel, Red Drum, Flounder, Pompano, Sea Mullet, Bluefish, Black Drum, Spots, Speckled Trout, Puppy Drum", winter: "Red Drum, Flounder, Speckled Trout, Puppy Drum", baitLures: "Live bait (mullet, shrimp), shrimp, sand fleas, smaller deep-diving lures (Mahi Mahi), jigs", techniques: "Trolling, bottom fishing, targeting Bogue Sound, Emerald Isle Woods Park, The Point" },
+            { pier: "Jolly Roger Pier", spring: "Virginia Mullet, Black Drum, Bluefish, Puppy Drum, Flounder, Spanish Mackerel, Cobia, King Mackerel", summer: "King Mackerel, Spanish Mackerel, Bluefish, Flounder, Puppy Drum, Black Drum, Sheepshead, Pompano, Spots, Summer Whiting, Cobia, Tarpon", fall: "Drum, Pompano, Blues, Virginia Mullet, Black Drum, Jumping Mullet, Spanish Mackerel, Speckled Trout, Flounder, Sheepshead, Spots", winter: "", baitLures: "Shrimp (fresh), artificial shrimp/clams, bloodworms, Gotcha-plug, Clarkspoon, Diamond Jig, Berkley Gulp, bucktails, live minnows, live shrimp, live bluefish/menhaden/grass shad", techniques: "Bottom rigs, quick retrieve (Spanish), sight casting (Cobia), dropping near pilings, pier trolling, pier chumming, bridge nets" },
+            { pier: "Surf City Pier", spring: "Sheepshead, Spot, Black Drum, Red Drum, Spanish Mackerel, Bluefish, Trout, Flounder, Albacore, Blowfish, Croaker, Sea Mullet, Speckled Trout, Cobia, King Mackerel, Pompano", summer: "Flounder, Spanish Mackerel, King Mackerel, Sharks, Black Drum, Barracuda, Jack Crevalle, Tarpon", fall: "Red Drum, Flounder, Spanish Mackerel, King Mackerel, Sharks, Albacore, Blowfish, Bluefish, Croaker, Gray Trout, Puppy/Red Drum, Sea Mullet, Sheepshead, Spanish Mackerel, Speckled Trout, Spot", winter: "Black Drum, Red Drum", baitLures: "Shrimp, artificial shrimp/clams, cut bait, chartreuse curlytail jigs, mono/braided lines, fluorocarbon leaders, circle hooks, pyramid/spider sinkers", techniques: "Slowly creep/hop rig, drop near pilings, pier trolling, pier chumming, targeting creeks, structures" },
+            { pier: "Seaview Fishing Pier", spring: "Common coastal species", summer: "Common coastal species", fall: "Common coastal species", winter: "Common coastal species", baitLures: "Fresh shrimp, squid, clam, shedder crab, bloodworms, sabiki rigs, small lures (bucktails, spoons)", techniques: "Drop line directly down, fish up-current side, targeting inshore hard structures, nearshore wrecks" },
+            { pier: "Avon Fishing Pier", spring: "Big Drum, Puppy Drum, Bluefish, Sea Mullet, Cobia, Blow Toads, Sharks", summer: "Citation-sized Red Drum, Cobia", fall: "Atlantic Croaker, Blacktip Shark, Pigfish, Spot Croaker, Ocean Sunfish, Black Drum, Short-tail Stingray, Bluefish, Southern Kingcroaker, Speckled Trout, Red Drum", winter: "Puppy Drum, Black Drum, Speckled Trout, Bluefin Tuna", baitLures: "Live bait (shrimp, mullet), fish bites, Got-Cha plugs, metal lures, Berkley Gulp, Ballyhoo", techniques: "Greensticking, trolling, vertical jigging (live bait), chunking, targeting \"the point,\" jetties, Ramp 43" },
+            { pier: "Rodanthe Pier", spring: "Bluefish, Spanish Mackerel, Tarpon", summer: "Tarpon, Bluefish, Spanish Mackerel, Croaker, Spot, Mullet, Cobia, Drum, Speckled Trout", fall: "Speckled Trout, Redfish, Bluefish, Pompano, Sea Mullet", winter: "Striped Bass", baitLures: "Simple rigs, egg sinkers, bloodworms, sand fleas, spoons, cut bait (squid, mullet), jig heads with soft plastics (Gulp, Voodoo Shrimp), popping cork", techniques: "Drop line directly down, surf fishing, sound fishing, targeting Cape Point, Hatteras Inlet, Pamlico Sound" },
+            { pier: "Outer Banks Fishing Pier", spring: "Sea Mullet, small Puppy Drum", summer: "Flounder, Cobia, Drum, Spot, Mullet, Puppy Drum, Bluefish, Spanish Mackerel, Flounder, Spot, Croakers, Trout, Amberjack, Spadefish, Tuna, Dolphin", fall: "Red Drum, Speckled Trout, Bluefish, Trout, Red Drum, Spanish Mackerel, Croaker, King Mackerel", winter: "Striped Bass", baitLures: "Fresh/frozen shrimp, mullet strips, bloodworms, sand fleas, menhaden, squid, clams, oysters, metal spoons, popping lures, jerk jigger style baits, lead-headed plastic grubs", techniques: "Casting, drifting live baits, pitching lures, tossing around pilings, chumming, targeting inlets, sloughs, sandbars" },
+            { pier: "Jennettes-Pier", spring: "Bluefish, Spanish Mackerel, Flounder, Sheepshead, Atlantic Bonito, Pin, Pigfish, Sea Mullet, Puppy Drum", summer: "Red Drum, Flounder, Bluefish, Sharks, Cobia, King Mackerel, False Albacore, Black Seabass", fall: "Red Drum, Speckled Trout, Mullet", winter: "Mullet, Puppy Drum", baitLures: "Got-Cha plugs", techniques: "Sight casting (King Mackerel, Cobia)" },
+            { pier: "Nags Head Pier", spring: "Bluefish, Trout, Sea Mullet, Puffers, Cobia, Red Drum, Spanish Mackerel", summer: "Flounder, Red Drum, Bluefish, Marlin, King Mackerel, Tarpon, Yellowfin Tuna, Mahi Mahi, Wahoo, Billfish", fall: "Spot, Trout, Bluefish, Spanish Mackerel, Red Drum, Puppy Drum, Black Drum, Yellowfin Tuna, Mahi Mahi, Wahoo, King Mackerel", winter: "Black Drum, Red Drum, Speckled Trout, Bluefin Tuna, Striped Bass", baitLures: "Fresh bait, bottom rigs, topwater lures, peeler/blue crabs, fresh clam, cut bait, shrimp, bloodworms, squid, minnow, metal squid, plugs, spinners, spoons, jigs", techniques: "Kite fishing, bottom fishing, sight casting, bouncing baits, targeting Oregon Inlet, Albemarle Sound, Advance II Wreck, Tuna Hole" },
+            { pier: "Kitty Hawk Pier", spring: "Speckled Trout, Black Sea Bass, Triggerfish, Slot Red Drum, Bluefin Tuna", summer: "Grunts, Cobia (juvenile), Gray Trout, Triggerfish, Flounder, Red Drum, Striped Bass, Kingfish, Rockfish, Tarpon", fall: "Striped Bass", winter: "Striped Bass", baitLures: "Lighter rods/reels, braided lines, fresh/frozen shrimp, mullet strips, bloodworms, sand fleas, live minnows/mullet, squid, jigs, soft plastics, topwater lures, crankbaits, spoons, heavy lures", techniques: "Casting, jigging, trolling, live baiting, focus under pier/near bridge bumpers, targeting Albemarle Sound, Currituck Sound, Kitty Hawk Bay, deep slough" },
+            { pier: "Avalon Pier", spring: "Bluefish, Spanish Mackerel, Croaker, occasional King Mackerel. Spot, Mullet, Puffers, Speckled Trout, Puppy Drum", summer: "Bluefish, Cobia, King Mackerel", fall: "Cobia, King Mackerel, Spanish Mackerel, Pompano. Bluefish consistent", winter: "", baitLures: "Frozen shrimp, mullet, squid; seasonal live bloodworms. FishBites, Gotcha Plugs. Plugs/bucktails for active lures", techniques: "Sight casting (bucktail for Cobia). End of pier = No Bottom Fishing. Live bait rig for Cobia." }
+        ];
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const navButtons = document.querySelectorAll('#navigation .nav-button');
+            const pages = document.querySelectorAll('.page-content');
+            const regionSelectors = document.querySelectorAll('.region-selector');
+            const pierListContainer = document.getElementById('pierListContainer');
+            const pierDetailView = document.getElementById('pierDetailView');
+
+            const monthFilter = document.getElementById('monthFilter');
+            const speciesFilterSeasonal = document.getElementById('speciesFilterSeasonal');
+            const seasonalCalendarHead = document.getElementById('seasonalCalendarHead');
+            const seasonalCalendarBody = document.getElementById('seasonalCalendarBody');
+            const resetSeasonalFiltersButton = document.getElementById('resetSeasonalFilters');
+
+            const pierQuickRefHead = document.getElementById('pierQuickRefHead');
+            const pierQuickRefBody = document.getElementById('pierQuickRefBody');
+            const regionFilterQuickRef = document.getElementById('regionFilterQuickRef');
+            const pierNameFilterQuickRef = document.getElementById('pierNameFilterQuickRef');
+            const resetQuickRefFiltersButton = document.getElementById('resetQuickRefFilters');
+
+            const pierComparisonHead = document.getElementById('pierComparisonHead');
+            const pierComparisonBody = document.getElementById('pierComparisonBody');
+            const pierNameFilterComparison = document.getElementById('pierNameFilterComparison');
+            const seasonFilterComparison = document.getElementById('seasonFilterComparison');
+            const fishSpeciesFilterComparison = document.getElementById('fishSpeciesFilterComparison');
+            const resetComparisonFiltersButton = document.getElementById('resetComparisonFilters');
+
+            const aiQuestionInput = document.getElementById('aiQuestionInput');
+            const askClydeButton = document.getElementById('askClydeButton');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const aiResponseContainer = document.getElementById('aiResponseContainer');
+
+            // Navigation
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.dataset.target;
+                    pages.forEach(page => {
+                        page.style.display = page.id === targetId ? 'block' : 'none';
+                    });
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    window.scrollTo(0, 0); 
+                });
+            });
+
+            // Seasonal Fish Calendar
+            const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            function populateSeasonalFilters() {
+                const uniqueSpecies = [...new Set(seasonalFishData.map(item => item.species))].sort();
+                uniqueSpecies.forEach(species => {
+                    const option = document.createElement('option');
+                    option.value = species;
+                    option.textContent = species;
+                    speciesFilterSeasonal.appendChild(option);
+                });
+            }
+
+            function renderSeasonalCalendar() {
+                const selectedMonth = monthFilter.value;
+                const selectedSpecies = speciesFilterSeasonal.value;
+
+                seasonalCalendarHead.innerHTML = '';
+                let headerRow = '<tr><th>Species</th>';
+                monthNames.forEach(month => headerRow += `<th>${month}</th>`);
+                headerRow += '</tr>';
+                seasonalCalendarHead.innerHTML = headerRow;
+
+                seasonalCalendarBody.innerHTML = '';
+                seasonalFishData
+                    .filter(fish => !selectedSpecies || fish.species === selectedSpecies)
+                    .forEach(fish => {
+                        let row = `<tr><td>${fish.species}</td>`;
+                        months.forEach(month => {
+                            const status = fish[month];
+                            let cellClass = '';
+                            if (status === 'Hot') cellClass = 'bg-red-200 text-red-800 font-semibold';
+                            else if (status === 'OK') cellClass = 'bg-yellow-100 text-yellow-800';
+                            else if (status === 'Closed') cellClass = 'bg-gray-300 text-gray-600';
+                            
+                            let displayStatus = status;
+                            if (!selectedMonth || selectedMonth === month || status) { 
+                            } else {
+                                displayStatus = '';
+                            }
+                            row += `<td class="${cellClass}">${displayStatus}</td>`;
+                        });
+                        row += '</tr>';
+                        seasonalCalendarBody.innerHTML += row;
+                    });
+            }
+            
+            monthFilter.addEventListener('change', renderSeasonalCalendar);
+            speciesFilterSeasonal.addEventListener('change', renderSeasonalCalendar);
+            resetSeasonalFiltersButton.addEventListener('click', () => {
+                monthFilter.value = '';
+                speciesFilterSeasonal.value = '';
+                renderSeasonalCalendar();
+            });
+
+
+            // Pier Quick Reference Table
+            function renderPierQuickRefTable() {
+                const selectedRegion = regionFilterQuickRef.value;
+                const nameFilter = pierNameFilterQuickRef.value.toLowerCase();
+
+                pierQuickRefHead.innerHTML = `
+                    <tr>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Length</th>
+                        <th>Fee (Adult)</th>
+                        <th>Blanket License</th>
+                        <th>Contact</th>
+                    </tr>`;
+                
+                pierQuickRefBody.innerHTML = '';
+                pierQuickRefData
+                    .filter(pier => 
+                        (!selectedRegion || pier.region === selectedRegion) &&
+                        (!nameFilter || pier.name.toLowerCase().includes(nameFilter))
+                    )
+                    .forEach(pier => {
+                        const row = `
+                            <tr>
+                                <td>${pier.name}</td>
+                                <td>${pier.location}</td>
+                                <td class="${pier.status.toLowerCase() === 'open' ? 'text-green-600' : 'text-red-600'}">${pier.status}</td>
+                                <td>${pier.length}</td>
+                                <td>${pier.fee}</td>
+                                <td>${pier.license}</td>
+                                <td>${pier.contact}</td>
+                            </tr>`;
+                        pierQuickRefBody.innerHTML += row;
+                    });
+            }
+
+            regionFilterQuickRef.addEventListener('change', renderPierQuickRefTable);
+            pierNameFilterQuickRef.addEventListener('input', renderPierQuickRefTable);
+            resetQuickRefFiltersButton.addEventListener('click', () => {
+                regionFilterQuickRef.value = '';
+                pierNameFilterQuickRef.value = '';
+                renderPierQuickRefTable();
+            });
+
+
+            // Pier Guide - Pier List and Detail View
+            function displayPiersByRegion(region) {
+                pierListContainer.innerHTML = '';
+                const filteredPiers = pierQuickRefData.filter(pier => pier.region === region && pier.status.toLowerCase() === 'open');
+                
+                if (filteredPiers.length === 0) {
+                    pierListContainer.innerHTML = `<p class="col-span-full text-center text-gray-500">No open piers listed for this region currently.</p>`;
+                    return;
+                }
+
+                filteredPiers.forEach(pier => {
+                    const pierCard = document.createElement('div');
+                    pierCard.className = 'pier-card';
+                    pierCard.textContent = pier.name;
+                    pierCard.dataset.pierId = pier.id;
+                    pierCard.addEventListener('click', () => displayPierDetails(pier.id));
+                    pierListContainer.appendChild(pierCard);
+                });
+            }
+
+            function displayPierDetails(pierId) {
+                const details = pierDetailsData[pierId];
+                if (details) {
+                    pierDetailView.innerHTML = `
+                        <h3 class="text-2xl font-bold text-amber-700 mb-4">${details.name}</h3>
+                        <div class="prose max-w-none">${details.content}</div>
+                    `;
+                    const summaries = pierDetailView.querySelectorAll('details summary');
+                     summaries.forEach(summary => {
+                        summary.classList.add('details-summary');
+                        const parentDetails = summary.parentElement;
+                        if (parentDetails) {
+                            const contentDiv = parentDetails.querySelector('div');
+                            if (contentDiv) {
+                                contentDiv.classList.add('details-content', 'mt-2');
+                            }
+                        }
+                    });
+
+                } else {
+                    pierDetailView.innerHTML = `<p class="text-center text-gray-500">Details for this pier are not available.</p>`;
+                }
+                pierDetailView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            regionSelectors.forEach(button => {
+                button.addEventListener('click', () => {
+                    const region = button.dataset.region;
+                    displayPiersByRegion(region);
+                    regionSelectors.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    pierDetailView.innerHTML = `<p class="text-center text-gray-500">Select a pier from the list above to see details.</p>`;
+                });
+            });
+
+            // Pier Comparison Table
+            function populatePierComparisonFilters() {
+                const uniquePierNames = [...new Set(pierComparisonData.map(item => item.pier))].sort();
+                uniquePierNames.forEach(pierName => {
+                    const option = document.createElement('option');
+                    option.value = pierName;
+                    option.textContent = pierName;
+                    pierNameFilterComparison.appendChild(option);
+                });
+            }
+
+
+            function renderPierComparisonTable() {
+                const selectedPier = pierNameFilterComparison.value;
+                const selectedSeason = seasonFilterComparison.value.toLowerCase();
+                const fishFilter = fishSpeciesFilterComparison.value.toLowerCase();
+
+                pierComparisonHead.innerHTML = `
+                    <tr>
+                        <th>Pier Name</th>
+                        <th>Spring Species</th>
+                        <th>Summer Species</th>
+                        <th>Fall Species</th>
+                        <th>Winter Species</th>
+                        <th>Recommended Bait/Lures</th>
+                        <th>Key Techniques</th>
+                    </tr>`;
+                
+                pierComparisonBody.innerHTML = '';
+                pierComparisonData
+                    .filter(pier => 
+                        (!selectedPier || pier.pier === selectedPier) &&
+                        (!selectedSeason || 
+                            (pier.spring.toLowerCase().includes(fishFilter) && selectedSeason === "spring") ||
+                            (pier.summer.toLowerCase().includes(fishFilter) && selectedSeason === "summer") ||
+                            (pier.fall.toLowerCase().includes(fishFilter) && selectedSeason === "fall") ||
+                            (pier.winter.toLowerCase().includes(fishFilter) && selectedSeason === "winter") ||
+                            (!fishFilter && selectedSeason) 
+                         ) &&
+                         ( !fishFilter || 
+                            pier.spring.toLowerCase().includes(fishFilter) ||
+                            pier.summer.toLowerCase().includes(fishFilter) ||
+                            pier.fall.toLowerCase().includes(fishFilter) ||
+                            pier.winter.toLowerCase().includes(fishFilter) ||
+                            pier.baitLures.toLowerCase().includes(fishFilter) || 
+                            pier.techniques.toLowerCase().includes(fishFilter) 
+                         )
+                    )
+                    .forEach(pier => {
+                        const row = `
+                            <tr>
+                                <td class="font-semibold">${pier.pier}</td>
+                                <td>${highlightText(pier.spring, fishFilter, selectedSeason === "spring")}</td>
+                                <td>${highlightText(pier.summer, fishFilter, selectedSeason === "summer")}</td>
+                                <td>${highlightText(pier.fall, fishFilter, selectedSeason === "fall")}</td>
+                                <td>${highlightText(pier.winter, fishFilter, selectedSeason === "winter")}</td>
+                                <td>${highlightText(pier.baitLures, fishFilter)}</td>
+                                <td>${highlightText(pier.techniques, fishFilter)}</td>
+                            </tr>`;
+                        pierComparisonBody.innerHTML += row;
+                    });
+            }
+            
+            function highlightText(text, filter, isSeasonMatch = true) {
+                if (!filter || !text) return text;
+                if (!isSeasonMatch && seasonFilterComparison.value) return text; 
+
+                const regex = new RegExp(`(${filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                return text.replace(regex, '<mark class="bg-yellow-200 rounded">$1</mark>');
+            }
+
+
+            pierNameFilterComparison.addEventListener('change', renderPierComparisonTable);
+            seasonFilterComparison.addEventListener('change', renderPierComparisonTable);
+            fishSpeciesFilterComparison.addEventListener('input', renderPierComparisonTable);
+            resetComparisonFiltersButton.addEventListener('click', () => {
+                pierNameFilterComparison.value = '';
+                seasonFilterComparison.value = '';
+                fishSpeciesFilterComparison.value = '';
+                renderPierComparisonTable();
+            });
+
+            // LLM Integration for "Ask Clyde AI"
+            askClydeButton.addEventListener('click', async () => {
+                const userQuestion = aiQuestionInput.value.trim();
+                if (!userQuestion) {
+                    aiResponseContainer.innerHTML = '<p class="text-red-500">Please enter a question for Clyde!</p>';
+                    return;
+                }
+
+                aiResponseContainer.innerHTML = '<p class="text-gray-500">Clyde is thinking... <span id="loadingSpinner" class="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500 inline-block"></span></p>';
+                askClydeButton.disabled = true;
+                loadingSpinner.classList.remove('hidden');
+
+                try {
+                    let chatHistory = [];
+                    const prompt = `You are Carolina Clyde, an expert pier fishing guide for North Carolina. Your knowledge is based on a comprehensive pier fishing almanac. Provide concise, helpful advice based on typical pier fishing conditions and species in North Carolina. If a specific detail isn't in your almanac, provide general best practices for pier fishing. User question: ${userQuestion}`;
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        aiResponseContainer.innerHTML = `<p>${text}</p>`;
+                    } else {
+                        aiResponseContainer.innerHTML = '<p class="text-red-500">Clyde is stumped! Could not get a valid response. Please try rephrasing your question.</p>';
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    aiResponseContainer.innerHTML = `<p class="text-red-500">An error occurred while asking Clyde: ${error.message}. Please try again.</p>`;
+                } finally {
+                    askClydeButton.disabled = false;
+                    loadingSpinner.classList.add('hidden');
+                }
+            });
+
+
+            // Initial setup
+            populateSeasonalFilters();
+            renderSeasonalCalendar();
+            renderPierQuickRefTable();
+            displayPiersByRegion('Southern Coastal Piers'); 
+            populatePierComparisonFilters();
+            renderPierComparisonTable();
+
+            document.querySelectorAll('details summary').forEach(summary => {
+                summary.addEventListener('click', (event) => {
+                    const detailsElement = summary.parentElement;
+                    if (detailsElement.hasAttribute('open')) {
+                    } else {
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

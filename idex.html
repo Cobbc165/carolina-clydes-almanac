@@ -1423,7 +1423,7 @@
 
                     chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                     const payload = { contents: chatHistory };
-                    const apiKey = ""; 
+                    const apiKey = "AIzaSyD3CcUffBjhauJedR2m1UfbBPHcFiObvXg"; 
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                     const response = await fetch(apiUrl, {
@@ -1467,7 +1467,7 @@
                     const prompt = `You are Carolina Clyde, an expert pier fishing guide for North Carolina. Your knowledge is based on a comprehensive pier fishing almanac. Provide concise, helpful advice based on typical pier fishing conditions and species in North Carolina. If a specific detail isn't in your almanac, provide general best practices for pier fishing. User question: ${userQuestion}`;
                     chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                     const payload = { contents: chatHistory };
-                    const apiKey = ""; 
+                    const apiKey = "AIzaSyD3CcUffBjhauJedR2m1UfbBPHcFiObvXg"; 
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                     const response = await fetch(apiUrl, {

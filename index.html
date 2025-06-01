@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Chosen Palette: Coastal Vibrancy (ADA Compliant) */
-        /* Application Structure Plan: Single-page app with tab/section navigation (Home, Gear Up, Rigging, Seasonal Almanac, NC Pier Guide, Fishing Methods & Tactics, Etiquette/Safety, Hot Tips, Closed Piers, Bait Advisor, Ask Clyde AI). The Pier Guide will be central, allowing regional selection and detailed views of individual piers. The Seasonal Almanac will use an interactive table for fish by season. The new Fishing Methods section provides in-depth tactical advice. This structure is chosen to organize the rich textual and tabular data logically, making it easy for users to find specific information relevant to their fishing plans, rather than a linear read. */
+        /* Application Structure Plan: Single-page app with tab/section navigation (Home, Gear Up, Rigging, Seasonal Almanac, NC Pier Guide, Fishing Methods & Tactics, Etiquette/Safety, Hot Tips, Closed Piers, Bait Advisor, Ask Clyde AI). The Pier Guide will be central, allowing regional selection and detailed views of individual piers. The Seasonal Almanac will use an interactive table for fish by season. The new Fishing Methods section provides in-depth tactical tactical advice. This structure is chosen to organize the rich textual and tabular data logically, making it easy for users to find specific information relevant to their fishing plans, rather than a linear read. */
         /* Visualization & Content Choices:
             - Welcome, Gear, Rigging, Etiquette, Tips, Closed Piers: Structured HTML text, lists, accordions for dense info. Goal: Inform. Interaction: Click to expand/collapse. Justification: Readability. Library: HTML/JS.
             - Seasonal Almanac (Fish by Season Table): Interactive HTML table. Goal: Inform/Compare. Interaction: Filter by month/species. Justification: Easy lookup of fish activity. Library: HTML/JS.
@@ -484,7 +484,7 @@
                     <p>Flounder are masters of camouflage, waiting on the bottom to ambush their prey.</p>
                     <ul>
                         <li><strong>Target Species:</strong> Flounder.</li>
-                        <li><strong>Recommended Rigs:</strong> A simple jig head (1/4 to 1 oz depending on current) with a live minnow or soft plastic bait. A Carolina rig with a live minnow can also be effective.</li>
+                        <li><strong>Recommended Rig:</strong> A simple jig head (1/4 to 1 oz depending on current) with a live minnow or soft plastic bait. A Carolina rig with a live minnow can also be effective.</li>
                         <li><strong>Best Baits:</strong> Live minnows (especially mud minnows), small live shrimp, Gulp! soft plastics (like shrimp or grub imitations).</li>
                         <li><strong>Technique:</strong> Cast your bait out and retrieve it very slowly, bouncing or dragging it along the bottom. Flounder will often be found near structure like pilings, rocks, or ledges. Feel for a subtle "thump" or increased weight.</li>
                         <li><strong>Optimal Times:</strong> Active in warmer months (late spring through fall), especially around structure and near inlets.</li>
@@ -497,7 +497,7 @@
                     <p>Sheepshead are notorious bait stealers with a very subtle bite, but they are delicious and a fun challenge.</p>
                     <ul>
                         <li><strong>Target Species:</strong> Sheepshead.</li>
-                        <li><strong>Recommended Rigs:</strong> A very small, strong hook (size 1 or 1/0) on a short leader, often with just a small split shot or no weight at all.</li>
+                        <li><strong>Recommended Rig:</strong> A very small, strong hook (size 1 or 1/0) on a short leader, often with just a small split shot or no weight at all.</li>
                         <li><strong>Best Baits:</strong> Fiddler crabs are by far the best. Small pieces of clam or shrimp can also work.</li>
                         <li><strong>Technique:</strong> Drop your bait straight down right next to barnacle-covered pilings. These fish nibble very gently. You'll feel a faint "tap-tap" before the actual bite. Set the hook quickly and firmly at the first sign of a bite.</li>
                         <li><strong>Optimal Times:</strong> Warmer months when they are actively feeding on barnacles around pier pilings.</li>
@@ -703,7 +703,10 @@
             { id: "jennettes-pier", name: "Jennette's Pier", location: "Nags Head", status: "Open", features: "Longest OBX Pier, Concrete Structure, NC Aquarium Affiliation, ADA Accessible", length: "1,000 ft", fee: "$14", rental: "$12.00", license: "Yes", contact: "(252) 255-1501", region: "Outer Banks Piers" },
             { id: "nags-head-pier", name: "Nags Head Pier", status: "Open", features: "Second Oldest OBX Pier, \"You Hook 'Em – We Cook 'Em\" Service, Tiki Bar", length: "750 ft", fee: "$15.00", rental: "$15.00", license: "N/A", contact: "(252) 441-5141", region: "Outer Banks Piers" },
             { id: "kitty-hawk-pier", name: "Kitty Hawk Pier", location: "Kitty Hawk", status: "Open", features: "Hilton Garden Inn Affiliation, Wedding Venue", length: "N/A", fee: "N/A (Less for Hilton Guests)", rental: "N/A", license: "N/A", contact: "N/A", region: "Outer Banks Piers" },
-            { id: "avalon-pier", name: "Avalon Pier", location: "Kill Devil Hills", status: "Open (Rebuilding Status)", features: "PierCam, BeachBar, Snack Shack, Retail Shop, Cleaning Stations", length: "700 ft", fee: "$17.50", rental: "$8.00", license: "Yes", contact: "N/A", region: "Outer Banks Piers" }
+            { id: "avalon-pier", name: "Avalon Pier", location: "Kill Devil Hills", status: "Open (Rebuilding Status)", features: "PierCam, BeachBar, Snack Shack, Retail Shop, Cleaning Stations", length: "700 ft", fee: "$17.50", rental: "$8.00", license: "Yes", contact: "N/A", region: "Outer Banks Piers" },
+            { id: "wrightsville-beach-pier", name: "Wrightsville Beach Pier", location: "Wrightsville Beach", status: "Open", features: "Webcam available", length: "N/A", fee: "N/A", rental: "N/A", license: "N/A", contact: "N/A", region: "Southern Coastal Piers" },
+            { id: "sunset-beach-pier", name: "Sunset Beach Pier", location: "Sunset Beach", status: "Open", features: "Live Pier Cams", length: "N/A", fee: "N/A", rental: "N/A", license: "N/A", contact: "N/A", region: "Southern Coastal Piers" },
+            { id: "ocracoke-pier", name: "Ocracoke Pier", location: "Ocracoke Island", status: "Open", features: "Webcam available", length: "N/A", fee: "N/A", rental: "N/A", license: "N/A", contact: "N/A", region: "Outer Banks Piers" }
         ];
         
         const pierDetailsData = {
@@ -770,8 +773,9 @@
                 content: `
                     <h4>Pier Profile: Length, Unique Features, History, Notable Records</h4>
                     <p>Family-owned since 1971. Built after Emerald Isle's 1957 incorporation. Rebuilt multiple times (Diane '84, Fran '96, Irene '11). NC State Record Sea Mullet (3 lb. 8 oz., 1971). Amenities: bait/tackle shop, food/drinks, beach gear, restrooms, Surf's Up Grill & Bar.</p>
+                    <p><strong>Live Webcam:</strong> <a href="https://www.ebmcdn.net/webcast/flash/bogue-inlet/live-iframe-jsobf.html" target="_blank" class="text-blue-600 hover:underline">Bogue Inlet Pier Live Stream</a></p>
                     <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
-                    <p><strong>Spring (Mar-May):</strong> Spanish Mackerel, Pompano, Bluefish, Sea Mullet, Gray Trout, Spots, Black Drum, Croakers. Arrival of King Mackerel, Cobia, Tarpon. Redfish/Flounder active post-Memorial Day. Spanish Mackerel peak Apr/May.</p>
+                    <p><strong>Spring (Mar-May):</strong> Spanish Mackerel, Pompano, Bluefish, Sea Mullet, Gray Trout, Spots, Black Drum, Croakers. Arrival of King Mackerel, Cobia, Tarpon. Redfish and Flounder become active after Memorial Day. Spanish Mackerel peak Apr/May.</p>
                     <p><strong>Summer (Jun-Aug):</strong> Large Bluefish, Spanish Mackerel, Sea Mullet, Gray Trout, Spots, Pompano. King Mackerel, Cobia, Tarpon common. Red Drum bite intensifies.</p>
                     <p><strong>Fall (Sep-Nov):</strong> King Mackerel peak migration. Red Drum, Flounder, Pompano, Sea Mullet, Bluefish, Black Drum, Spots, Speckled Trout, Puppy Drum active.</p>
                     <p><strong>Winter (Dec-Feb):</strong> Red Drum, Flounder, Speckled Trout, Puppy Drum viable.</p>
@@ -791,34 +795,34 @@
                     <h5>Live Conditions & Forecast</h5>
                     <p>Check live wind, water temperature, and detailed marine forecasts for Bogue Inlet Pier: <a href="https://www.windy.app/spot/576081534/bogue-inlet-pier-wind-forecast" target="_blank" class="text-blue-600 hover:underline">Windy.app - Bogue Inlet Pier</a></p>
                     <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
-                    <p><strong>2025 Fees:</strong> Daily fishing $17.50 (2 rods, kids 6/under free). Season pass $350. 3-day pass $47.50. Rod rental $10/6hrs. "Total Package" $38.68. <strong>Parking:</strong> Free with fishing pass. Beach parking $5/hr (max $30, Apr 15-Sep 1). Free 10-min drop-off/take-out. Surf's Up dining = 2hrs free. Ice cream = 60min free. <strong>Hours:</strong> Open for 2025 season. <strong>License:</strong> Not required (blanket license).</p>
+                    <p><strong>2025 Fees:</strong> Daily fishing $17.50 (2 rods, kids 6/under free). Season pass $350. 3-day pass $47.50. Rod rental $10 (6 hrs). "Total Package" $38.68. <strong>Parking:</strong> Free with fishing pass. Beach parking $5/hr (max $30, Apr 15-Sep 1). Free 10-min drop-off/take-out. Surf's Up dining = 2hrs free. Ice cream = 60min free. <strong>Hours:</strong> Open for 2025 season. <strong>License:</strong> Not required (blanket license).</p>
                 `
             },
             "jolly-roger-pier": {
                 name: "Jolly Roger Pier",
                 content: `
                     <h4>Pier Profile: Length, Unique Features</h4>
-                    <p>Built 1954 by Lewis Orr. 850 ft long. Good for fishing & strolling. Fully lit at night. Jolly Roger Inn guests: free walking, discounted fishing. Facilities: tackle shop (pier, surf, sound, offshore), rod rentals, ice, snacks, beverages.</p>
+                    <p>Built 1954 by Lewis Orr. 850 ft long. Good for fishing & strolling. Fully lit at night. Jolly Roger Inn guests: free walking, discounted fishing. Facilities: tackle shop (pier, surf, sound, offshore), rod rentals, ice, snacks, and beverages.</p>
                     <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
-                    <p><strong>Spring (Mid-Mar-May):</strong> Virginia Mullet (whiting), Black Drum. Bluefish (1-3 lbs, then "chopper blues" 5-20 lbs late Mar). Puppy Drum, Flounder (around Apr 1). Spanish Mackerel (1-5 lbs, late Apr). May: peak spring, Cobia, King Mackerel.</p>
-                    <p><strong>Summer (Jun-Aug):</strong> King Mackerel, Spanish Mackerel, Bluefish, Flounder, Puppy Drum, Black Drum, Sheepshead, Pompano, Spots, Summer Whiting, Cobia. Tarpon (100-120 lbs, esp. Jul-Aug).</p>
-                    <p><strong>Fall (Sep-Nov):</strong> Drum (slot/over-slot), Pompano, Blues, Virginia Mullet, Black Drum, Jumping Mullet. Spanish Mackerel, Speckled Trout, Flounder, Spots remain active.</p>
+                    <p><strong>Spring (Mid-Mar-May):</strong> Virginia Mullet (whiting), Black Drum. Bluefish (1-3 lbs, then "chopper blues" 5-20 lbs late Mar). Puppy Drum and Flounder become more active around April 1st. Spanish Mackerel (1-5 lbs) appear in late April. May is considered the pinnacle of the spring season, bringing in warmer water species such as Cobia and King Mackerel.</p>
+                    <p><strong>Summer (June-August):</strong> Offers a wide variety of catches, including King Mackerel, Spanish Mackerel, Bluefish, Flounder, Puppy Drum, Black Drum, Sheepshead, Pompano, Spots, Summer Whiting, and Cobia. Tarpon, some weighing over 100-120 lbs, are observed in remarkable numbers, particularly from July to August.</p>
+                    <p><strong>Fall (September-November):</strong> Sees a resurgence of Drum (including slot and over-the-slot sizes), Pompano, Blues, Virginia Mullet, Black Drum, and Jumping Mullet. Spanish Mackerel, Speckled Trout, Flounder, and Spots also remain active.</p>
                     <h4>Common Catches: Typical Sizes & Abundance</h4>
-                    <p>Historic reports (2010-18): King Mackerel (20-40 lbs), Tarpon (60-100 lbs, 66 lb landed), Puppy Drum (to 8 lbs), Sheepshead (8 lb 15 oz), Spanish Mackerel (4.5-7.2 lbs), Black Drum (7 lbs, 8.2 lbs), Flounder (to 3.5 lbs). Reports of "tons of mullet," "good run of blues," and "lots of Spanish."</p>
+                    <p>Historical reports from 2010-2018 indicate a range of common catches and sizes: King Mackerel (20-40 lbs), Tarpon (60-100 lbs, with a 66 lb specimen landed), Puppy Drum (up to 8 lbs), Sheepshead (a notable 8 lb 15 oz catch), Spanish Mackerel (4.5-7.2 lbs), Black Drum (7 lbs, 8.2 lbs), and Flounder (up to 3.5 lbs). Anglers have reported "tons of mullet," "good run of blues," and "lots of Spanish around," suggesting varying levels of abundance for different species throughout the seasons.</p>
                     <h4>Angler's Edge: Recommended Baits, Rigs, & Techniques</h4>
-                    <p><strong>Best Baits:</strong> For VA Mullet/Black Drum: fresh shrimp (best), artificial shrimp, clams, bloodworms. For Bluefish/Spanish: Gotcha-plugs, Clarkspoons, Diamond Jigs (Spanish); cut bait/lures (blues). For Puppy Drum/Flounder: Berkley Gulp, bucktails, fresh cut bait, live minnows, live shrimp. For Cobia/King Mackerel: Live baits (bluefish, menhaden, grass shad). For Spots/Mullet: Bloodworms.</p>
+                    <p><strong>Best Baits:</strong> For Virginia Mullet and Black Drum: fresh shrimp (best), artificial shrimp, clams, and bloodworms. For Bluefish and Spanish Mackerel: Gotcha-plugs, Clarkspoons, and Diamond Jigs (for Spanish), while cut bait or artificial lures are also effective for blues. A quick retrieve is recommended for Spanish Mackerel. For Puppy Drum and Flounder: artificial baits such as Berkley Gulp or bucktails, fresh cut bait, live minnows, and live shrimp are productive. For Cobia and King Mackerel: Live baits like bluefish, menhaden, and grass shad, often using a specific live bait rig for King Mackerel. For Spots and Mullet: Bloodworms.</p>
                     <p><strong>Optimal Times for Bait/Species:</strong> Spanish Mackerel best during "low light" (early AM, late PM, after dark) in summer months. Bloodworms for Spots/Mullet at night.</p>
-                    <p><strong>Key Techniques:</strong> Bottom rigs for Mullet/Drum. Quick retrieve for Spanish. Drop near pilings. Fish up-current side. "Pier trolling," "pier chumming." Use a bridge net for big fish.</p>
+                    <p><strong>Key Techniques:</strong> Bottom rigs for Mullet/Drum. Quick retrieve for Spanish. Drop near pilings. Fish up-current side. "Pier trolling" (walking along the pier while towing a lure or bait) and "pier chumming" can also generate increased action. A "bridge net" is a useful tool for landing larger fish.</p>
                     <h4>Optimal Conditions: Tides, Time of Day, Weather Insights</h4>
                     <p><strong>Water Temperature:</strong> Follows seasonal trends for NC coast.</p>
                     <p><strong>Time of Day:</strong> "Low light" (early AM, late PM, after dark) for Spanish Mackerel, especially in summer months.</p>
-                    <p><strong>Wind:</strong> S/SW for mullet. SE-SW (0-20mph) for Spanish. Easterly winds clear water, concentrate bait. Wind direction impacts casting.</p>
+                    <p><strong>Wind:</strong> South or Southwest wind is preferable for mullet, while SE to SW winds (0-20 mph) are ideal for Spanish Mackerel. Easterly winds can help clear the water and concentrate baitfish closer to the beach. Wind direction impacts casting.</p>
                     <p><strong>Tides/Current:</strong> Tide times available, specific optimal stages not detailed, but general principles of moving tides activating fish apply. Easterly winds can clear water and concentrate bait.</p>
                     <p><strong>Barometric Pressure:</strong> Not specifically mentioned for Jolly Roger, but general principles apply (rising pressure good, falling can trigger pre-storm feeding).</p>
                     <h5>Live Conditions & Forecast</h5>
                     <p>Check live wind, water temperature, and detailed marine forecasts for Jolly Roger Pier: <a href="https://www.windy.app/spot/25732/topsail-beach-wind-forecast" target="_blank" class="text-blue-600 hover:underline">Windy.app - Topsail Beach (VERIFY URL)</a></p>
                     <h4>Visitor Essentials: Fees, Hours, Amenities, Regulations</h4>
-                    <p><strong>2025 Fees:</strong> Daily fishing $16 (2 rods), King Fishing $27 (3 rods). Spectator $2. Multi-day/weekly/season passes available. Kids 13/under half-price. <strong>Hours:</strong> Seasonal. Apr-May: 7am-dark. Jun-Mid Sep: 6am-midnight. Thereafter: 7am-midnight. Opens weekend before Easter, closes weekend after Thanksgiving. <strong>License:</strong> Blanket license covers customers.</p>
+                    <p><strong>2025 Fees:</strong> Daily fishing $16 for up to two rods, with King Fishing passes at $27 for up to three rods. A spectator pass is $2. Multi-day passes, including 3-day, 5-day, and weekly options, are also available. Season passes are priced at $300 for fishing, $400 for King Fishing, $45 for spectators, and $95 for cottage guests. Children aged 13 and younger receive half-price fishing tickets. <strong>Hours:</strong> Seasonal. Apr-May: 7am-dark. Jun-Mid Sep: 6am-midnight. Thereafter: 7am-midnight. Generally, the pier opens the weekend before Easter and closes the weekend after Thanksgiving. <strong>License:</strong> Blanket license covers customers.</p>
                 `
             },
             "surf-city-pier": {
@@ -826,6 +830,7 @@
                 content: `
                     <h4>Pier Profile: Length, Unique Features</h4>
                     <p>Topsail Island's first ocean pier (1948). Lore family owned since 1973. Rebuilt after Hurricane Fran (1996), reopened Aug 1997. 937 ft long, 40-ft octagon end. 2 large fish cleaning stations (fresh water, lighting). Bait, tackle shop, souvenirs, grill, ice cream, covered dining.</p>
+                    <p><strong>Live Webcam:</strong> <a href="https://www.surfchex.com/cams/surf-city-pier-south/" target="_blank" class="text-blue-600 hover:underline">Surf City Pier Live Webcam</a></p>
                     <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
                     <p><strong>Spring (Mar-May):</strong> Sheepshead, Spot, Black Drum, Red Drum, Spanish Mackerel, Bluefish, Trout, Flounder. Also: Albacore, Blowfish, Croaker, Sea Mullet, Speckled Trout. Cobia (May-Jul), King Mackerel (May-Oct), Pompano (Apr-Sep).</p>
                     <p><strong>Summer (Jun-Aug):</strong> Flounder, Spanish Mackerel, King Mackerel, Sharks, Black Drum. Barracuda (Jul-Sep), Jack Crevalle (summer), Tarpon (Jul-Sep).</p>
@@ -994,10 +999,11 @@
                 content: `
                     <h4>Pier Profile: Length, Unique Features ("You Hook 'Em – We Cook 'Em" Service)</h4>
                     <p>750 ft long. Second oldest OBX pier (1947). "You Hook 'Em – We Cook 'Em" service by Pier House Restaurant. Capt. Andy's Oceanfront Tiki Bar and Grill. Full-service tackle shop, rod/reel rentals, ample parking.</p>
+                    <p><strong>Live Webcam:</strong> <a href="https://www.nagsheadpier.com/fishing-pier/pier-cam/" target="_blank" class="text-blue-600 hover:underline">Nags Head Fishing Pier Live Webcam</a></p>
                     <h4>Seasonal Fishing Guide: Peak Seasons & Target Species</h4>
                     <p><strong>Spring:</strong> Bluefish, Trout, Sea Mullet, Puffers. Cobia, Red Drum, Spanish Mackerel active.</p>
                     <p><strong>Summer:</strong> Flounder, Red Drum, Bluefish, Marlin, King Mackerel, Tarpon. Offshore: Yellowfin Tuna, Mahi Mahi, Wahoo, Billfish.</p>
-                    <p><strong>Fall (Late Summer/Early):</strong> Spot, Trout, Bluefish, Spanish Mackerel, Red Drum, Puppy Drum, Black Drum. Yellowfin Tuna, Mahi Mahi, Wahoo, King Mackerel.</p>
+                    <p><strong>Fall (Late Summer/Early Fall):</strong> Spot, Trout, Bluefish, Spanish Mackerel, Red Drum, Puppy Drum, Black Drum. Yellowfin Tuna, Mahi Mahi, Wahoo, King Mackerel.</p>
                     <p><strong>Winter:</strong> Black Drum, Red Drum, Speckled Trout. Bluefin Tuna, Striped Bass.</p>
                     <h4>Common Catches: Typical Sizes & Abundance</h4>
                     <p>May 2025 reports: Yellowfin Tuna, Cobia, Sea Bass, Red Drum, Bluefish, Spanish Mackerel, Triggerfish, Sand Tiger Sharks, Moonfish. Past: Red Drum, 25-inch Puppy Drum, 100-lb Tarpon, King Mackerel, Pompano (to 3 lb 9 oz), Spanish Mackerel (to 5 lb 13 oz).</p>
